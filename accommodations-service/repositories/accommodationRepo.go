@@ -22,12 +22,7 @@ type AccommodationRepo struct {
 func New(ctx context.Context, logger *log.Logger) (*AccommodationRepo, error) {
 	dburi := os.Getenv("MONGO_DB_URI")
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(dburi))
-	if err != nil {
-		return nil, err
-	}
-
-	err = client.Connect(ctx)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(dburi))
 	if err != nil {
 		return nil, err
 	}
@@ -71,19 +66,19 @@ func (ar *AccommodationRepo) GetAll() (domain.Accommodations, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	patientsCollection := ar.getCollection()
+	accommCollection := ar.getCollection()
 
-	var patients domain.Accommodations
-	patientsCursor, err := patientsCollection.Find(ctx, bson.M{})
+	var accommodations domain.Accommodations
+	accommodationsCursor, err := accommCollection.Find(ctx, bson.M{})
 	if err != nil {
 		ar.logger.Println(err)
 		return nil, err
 	}
-	if err = patientsCursor.All(ctx, &patients); err != nil {
+	if err = accommodationsCursor.All(ctx, &accommodations); err != nil {
 		ar.logger.Println(err)
 		return nil, err
 	}
-	return patients, nil
+	return accommodations, nil
 }
 
 func (ar *AccommodationRepo) Insert(accommodation *domain.Accommodation) error {
@@ -101,7 +96,7 @@ func (ar *AccommodationRepo) Insert(accommodation *domain.Accommodation) error {
 }
 
 func (ar *AccommodationRepo) getCollection() *mongo.Collection {
-	patientDatabase := ar.cli.Database("mongoDemo")
-	patientsCollection := patientDatabase.Collection("patients")
-	return patientsCollection
+	accommDatabase := ar.cli.Database("mongoDemo")
+	accommCollection := accommDatabase.Collection("accommodations")
+	return accommCollection
 }

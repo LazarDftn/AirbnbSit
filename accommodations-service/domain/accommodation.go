@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Accommodation struct {
-	Id          uuid.UUID
-	Owner       string //change type string to User
-	Name        string
-	Location    string
-	MinCapacity int
-	MaxCapacity int
+	Id          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Owner       string             `bson:"owner" json:"owner"` //change type string to User
+	Name        string             `bson:"name" json:"name"`
+	Location    string             `bson:"location" json:"location"`
+	Benefits    string             `bson:"benefits" json:"benefits"`
+	MinCapacity int                `bson:"minCapacity" json:"minCapacity"`
+	MaxCapacity int                `bson:"maxCapacity" json:"maxCapacity"`
 }
 
 type Accommodations []*Accommodation

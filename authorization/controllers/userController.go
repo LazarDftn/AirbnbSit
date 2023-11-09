@@ -4,19 +4,18 @@ import (
 	"context"
 	"fmt"
 	"github.com/LazarDftn/AirbnbSit/authorization/database"
-	helper "github.com/LazarDftn/AirbnbSit/authorization/helper"
+	"github.com/LazarDftn/AirbnbSit/authorization/helper"
 	"github.com/LazarDftn/AirbnbSit/authorization/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")

@@ -1,4 +1,4 @@
-module AirbnbSit
+module github.com/LazarDftn/AirbnbSit
 
 go 1.21.3
 

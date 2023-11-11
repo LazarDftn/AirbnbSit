@@ -1,21 +1,22 @@
 package controllers
 
 import (
+	"auth/database"
+	helper "auth/helpers"
+	"auth/models"
 	"context"
 	"fmt"
-	"github.com/LazarDftn/AirbnbSit/authorization/database"
-	"github.com/LazarDftn/AirbnbSit/authorization/helper"
-	"github.com/LazarDftn/AirbnbSit/authorization/models"
+	"log"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
-	"log"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")

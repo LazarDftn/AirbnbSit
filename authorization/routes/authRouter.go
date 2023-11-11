@@ -1,7 +1,8 @@
 package routes
 
 import (
-	controller "github.com/LazarDftn/AirbnbSit/authorization/controllers"
+	controller "auth/controllers"
+
 	"github.com/gin-gonic/gin"
 )
 

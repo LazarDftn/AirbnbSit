@@ -1,8 +1,9 @@
 package routes
 
 import (
-	controller "github.com/LazarDftn/AirbnbSit/authorization/controllers"
-	"github.com/LazarDftn/AirbnbSit/authorization/middleware"
+	controller "auth/controllers"
+	"auth/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,11 +1,12 @@
 package authorization
 
 import (
-	routes "github.com/LazarDftn/AirbnbSit/authorization/routes"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	routes "auth/routes"
 	"log"
 	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {

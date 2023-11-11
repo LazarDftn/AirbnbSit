@@ -1,17 +1,18 @@
 package helper
 
 import (
+	"auth/database"
 	"context"
 	"fmt"
-	"github.com/LazarDftn/AirbnbSit/authorization/database"
+	"log"
+	"os"
+	"time"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"os"
-	"time"
 )
 
 type SignedDetails struct {

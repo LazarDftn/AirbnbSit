@@ -1,7 +1,8 @@
 package AirbnbSit
 
 import (
-	"github.com/LazarDftn/AirbnbSit/authorization"
+	authorization "auth"
+
 	"github.com/gin-gonic/gin"
 )
 

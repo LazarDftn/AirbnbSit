@@ -1,10 +1,11 @@
 package middleware
 
 import (
+	helper "auth/helpers"
 	"fmt"
-	helper "github.com/LazarDftn/AirbnbSit/authorization/helpers"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func Authenticate() gin.HandlerFunc {

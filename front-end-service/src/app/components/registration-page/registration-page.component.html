@@ -1,3 +1,69 @@
 <nav-bar></nav-bar>
 
-<p>registration-page works!</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking.com Login</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <!-- Registration Section -->
+    <section id="registration" class="container mt-4">
+        <h2 class="text-center">Register to AirBnb</h2>
+        <div class="wholebox">
+                 <form id="registrationForm">
+                    <div class="box1">
+                        <div class="form-group">
+                            <label for="FName">First Name:</label>
+                            <input class="form-control" id="fname" placeholder="Enter your First Name" required>
+                        </div>
+    
+                        <div class="form-group">
+                            <label for="LName">Last Name:</label>
+                            <input class="form-control" id="lname" placeholder="Enter your Last Name" required>
+                        </div>
+    
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" class="form-control" id="email" placeholder="Enter your Email Address" required>
+                        </div>
+                    </div>
+                    <div class="box2">
+                        <div class="form-group">
+                            <label for="PLiving">Place of living:</label>
+                            <input class="form-control" id="pliving" placeholder="Enter your Place of Living" required>
+                        </div>
+            
+                        <div class="form-group">
+                            <label for="Username">Username:</label>
+                            <input class="form-control" id="username" placeholder="Enter your Unique Username" required>
+                        </div>
+            
+                        <div class="form-group">
+                            <label for="password">Password:</label>
+                            <input type="password" class="form-control" id="password" placeholder="Enter your Password" required>
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <button type="submit" class="btn btn-primary w-100">Register</button>
+                    <span class="center margin-top">Allready an user? <a class="sign-up-link" routerLink="/login-page">Login!</a></span>
+                    </div>
+                </form>
+        </div>
+
+        
+        
+    </section>
+ 
+    <!-- Bootstrap & jQuery JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+
+
+

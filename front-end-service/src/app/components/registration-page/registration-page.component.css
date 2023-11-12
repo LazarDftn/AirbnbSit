@@ -1,0 +1,21 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+#registration {
+    background-color: #f3f3f3;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.box1 {
+    width: 49%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.box2 {
+    width: 49%;
+    display: inline-block;
+}

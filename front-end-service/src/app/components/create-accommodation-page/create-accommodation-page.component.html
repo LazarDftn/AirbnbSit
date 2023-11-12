@@ -1,0 +1,60 @@
+<nav-bar></nav-bar>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking.com Login</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <section id="create-accomm" class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h2 class="text-center">Create an accommodation</h2>
+                <form id="createAccommForm" [formGroup]="accommForm" (ngSubmit)="onSubmit()">
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="name" class="form-control" [(ngModel)]="accommodation.name" 
+                        formControlName="name" placeholder="Enter name" required>
+                            <div *ngIf="accommForm.controls['name'].errors?.['required'] && submitted" style="color:red;">
+                            Please enter a Name!
+                          </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <input type="location" class="form-control" [(ngModel)]="accommodation.location" 
+                        formControlName="location" placeholder="Enter location" required>
+                        <div *ngIf="accommForm.controls['location'].errors?.['required'] && submitted" style="color:red;">
+                            Please enter a Location!
+                          </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="benefits">Benefits:</label>
+                        <textarea type="text-field" class="form-control" [(ngModel)]="accommodation.benefits"
+                        formControlName="benefits" placeholder="Enter benefits"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="minCapacity">Minimum capacity:</label>
+                        <input type="number" class="form-control" [(ngModel)]="accommodation.minCapacity"
+                        formControlName="minCapacity" placeholder="Enter minimum capacity" required>
+                        <div *ngIf="accommForm.controls['minCapacity'].errors?.['min'] && submitted" style="color:red;">
+                            Minimum capacity can't be below 1!
+                          </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxCapacity">Maximum capacity:</label>
+                        <input type="number" class="form-control" [(ngModel)]="accommodation.maxCapacity" 
+                        formControlName="maxCapacity" placeholder="Enter maximum capacity" required>
+                        <div *ngIf="(accommodation.maxCapacity < accommodation.minCapacity) && submitted" style="color:red;">
+                            Maximum capacity can't be below minimum capacity!
+                          </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Create</button>
+                </form>
+            </div>
+        </div>
+    </section>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>

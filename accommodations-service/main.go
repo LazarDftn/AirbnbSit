@@ -42,6 +42,7 @@ func main() {
 
 	router := gin.Default()
 	router.Use(accommodationHandler.MiddlewareContentTypeSet())
+	router.Use(accommodationHandler.CORSMiddleware())
 
 	router.POST("/accommodations", accommodationHandler.PostAccommodation)
 	router.GET("/accommodations", accommodationHandler.GetAllAccommodations)

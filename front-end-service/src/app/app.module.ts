@@ -7,6 +7,7 @@ import { LoginPageComponent } from './components/login-page/login-page.component
 import { RegistrationPageComponent } from './components/registration-page/registration-page.component';
 import { WelcomePageComponent } from './components/welcome-page/welcome-page.component';
 import { NavBarComponent } from './components/nav-bar/nav-bar.component';
+import { CreateAccommodationPageComponent } from './components/create-accommodation-page/create-accommodation-page.component';
 
 
 @NgModule({
@@ -15,7 +16,8 @@ import { NavBarComponent } from './components/nav-bar/nav-bar.component';
     LoginPageComponent,
     RegistrationPageComponent,
     WelcomePageComponent,
-    NavBarComponent
+    NavBarComponent,
+    CreateAccommodationPageComponent
   ],
   imports: [
     BrowserModule,

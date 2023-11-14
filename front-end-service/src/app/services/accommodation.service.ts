@@ -25,7 +25,12 @@ export class AccommodationService {
             Location: accommodation.location,
             Benefits: accommodation.benefits,
             MinCapacity: accommodation.minCapacity,
-            MaxCapacity: accommodation.maxCapacity
+            MaxCapacity: accommodation.maxCapacity,
+            Price: accommodation.price,
+            DiscPrice: accommodation.discPrice,
+            DiscPriceStart: accommodation.discDateStart,
+            DiscPriceEnd: accommodation.discDateEnd,
+            PayPer: accommodation.payPer
         }
 
         const postHeaders = new HttpHeaders({

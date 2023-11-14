@@ -36,7 +36,12 @@ export class CreateAccommodationPageComponent {
       location: ["Location field is requried!", Validators.required],
       benefits: [],
       minCapacity: ["Minimum capacity can't be below 1!", Validators.min(1)],
-      maxCapacity: []
+      maxCapacity: [],
+      price: ["Price can't be negative!", Validators.min(0)],
+      discPrice: ["Price can't be negative!", Validators.min(0)],
+      discDateStart: [],
+      discDateEnd: [],
+      payPer: []
     });
   }
 

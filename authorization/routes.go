@@ -1,4 +1,4 @@
-package authorization
+package main
 
 import (
 	"auth/controllers"

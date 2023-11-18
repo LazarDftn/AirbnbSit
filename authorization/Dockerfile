@@ -1,13 +1,13 @@
-
-FROM golang:alpine as build_container
+FROM golang:latest as builder
 WORKDIR /app
-COPY go.mod ./
-COPY go.sum .
+COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -o server
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
-FROM alpine
-COPY --from=build_container /app/server /usr/bin
-EXPOSE 8080
-ENTRYPOINT ["server"]
+FROM alpine:latest
+WORKDIR /root/
+COPY --from=builder /app/main .
+EXPOSE 8000
+
+CMD ["./main"]

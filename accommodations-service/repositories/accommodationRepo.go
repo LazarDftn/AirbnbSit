@@ -20,7 +20,7 @@ type AccommodationRepo struct {
 }
 
 func New(ctx context.Context, logger *log.Logger) (*AccommodationRepo, error) {
-	dburi := os.Getenv("MONGO_DB_URI")
+	dburi := os.Getenv("mongodb://accommodations_db:27017/")
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(dburi))
 	if err != nil {

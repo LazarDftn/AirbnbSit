@@ -17,7 +17,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if len(port) == 0 {
-		port = "8080"
+		port = "8000"
 	}
 
 	// Initialize context
@@ -44,10 +44,10 @@ func main() {
 	router.Use(accommodationHandler.MiddlewareContentTypeSet())
 	router.Use(accommodationHandler.CORSMiddleware())
 
-	router.POST("/accommodations", accommodationHandler.PostAccommodation)
-	router.GET("/accommodations", accommodationHandler.GetAllAccommodations)
+	router.POST("/", accommodationHandler.PostAccommodation)
+	router.GET("/", accommodationHandler.GetAllAccommodations)
 
-	router.Run(":8080")
+	router.Run(":8000")
 
 	server := http.Server{
 		Addr:         ":" + port,

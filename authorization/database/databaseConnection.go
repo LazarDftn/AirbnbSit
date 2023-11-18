@@ -13,7 +13,7 @@ import (
 
 func DBinstance() *mongo.Client {
 
-	MongoDb := os.Getenv("MONGO_DB_URI")
+	MongoDb := os.Getenv("mongodb://auth_db:27017/")
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(MongoDb))
 	if err != nil {

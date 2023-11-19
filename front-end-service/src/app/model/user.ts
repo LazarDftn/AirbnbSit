@@ -1,14 +1,14 @@
 export class User{
-    firstName: string;
-    lastName: string;
+    fName: string;
+    lName: string;
     username: string;
     password: string;
     email: string;
     address: string;
     type: string;
     constructor(){
-        this.firstName = ""
-        this.lastName = ""
+        this.fName = ""
+        this.lName = ""
         this.username = ""
         this.password = ""
         this.email = ""

@@ -46,6 +46,7 @@ func Signup() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 		var user models.User
 
 		if err := c.BindJSON(&user); err != nil {
@@ -59,8 +60,7 @@ func Signup() gin.HandlerFunc {
 			return
 		}
 
-		count, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
-		defer cancel()
+		emailCount, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
 		if err != nil {
 			log.Panic(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the email"})
@@ -69,15 +69,20 @@ func Signup() gin.HandlerFunc {
 		password := HashPassword(*user.Password)
 		user.Password = &password
 
-		count, err = userCollection.CountDocuments(ctx, bson.M{"address": user.Address})
-		defer cancel()
+		usernameCount, err := userCollection.CountDocuments(ctx, bson.M{"username": user.Username})
 		if err != nil {
 			log.Panic(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the address"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the username"})
 		}
 
-		if count > 0 {
+		if emailCount > 0 {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "this email already exists"})
+			return
+		}
+
+		if usernameCount > 0 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "this username already exists"})
+			return
 		}
 
 		user.ID = primitive.NewObjectID()
@@ -100,6 +105,7 @@ func Signup() gin.HandlerFunc {
 func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 		var user models.User
 		var foundUser models.User
 
@@ -116,7 +122,6 @@ func Login() gin.HandlerFunc {
 		}
 
 		passwordIsValid, msg := VerifyPassword(*user.Password, *foundUser.Password)
-		defer cancel()
 		if passwordIsValid != true {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return

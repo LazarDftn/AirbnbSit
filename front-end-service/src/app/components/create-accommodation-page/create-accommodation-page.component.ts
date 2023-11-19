@@ -40,7 +40,8 @@ export class CreateAccommodationPageComponent {
       price: ["Price can't be negative!", Validators.min(0)],
       discPrice: ["Price can't be negative!", Validators.min(0)],
       discDateStart: [],
-      discDateEnd: [],
+      discDateEnd: ["Start date can't be after end date!", Validators.min(this.accommodation.discDateEnd.getTime())],//nznm da li je
+                                                                                                                  //ovo nesto sto moze
       payPer: []
     });
   }

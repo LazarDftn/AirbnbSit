@@ -40,10 +40,9 @@ func main() {
 	accommodationHandler := handlers.NewAccommodationsHandler(logger, store)
 
 	router := gin.Default()
-	router.Use(accommodationHandler.MiddlewareContentTypeSet())
-	router.Use(accommodationHandler.CORSMiddleware())
+	router.Use(accommodationHandler.MiddlewareContentTypeSet(), accommodationHandler.CORSMiddleware())
 
-	router.POST("/", accommodationHandler.PostAccommodation)
+	router.POST("/create", accommodationHandler.PostAccommodation)
 	router.GET("/", accommodationHandler.GetAllAccommodations)
 
 	router.Run(":" + port)

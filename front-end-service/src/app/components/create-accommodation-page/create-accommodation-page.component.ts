@@ -42,6 +42,7 @@ export class CreateAccommodationPageComponent {
       discDateStart: [],
       discDateEnd: ["Start date can't be after end date!", Validators.min(this.accommodation.discDateEnd.getTime())],//nznm da li je
                                                                                                                   //ovo nesto sto moze
+      discWeekend:[],
       payPer: []
     });
   }

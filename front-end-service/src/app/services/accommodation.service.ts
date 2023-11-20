@@ -30,6 +30,7 @@ export class AccommodationService {
             DiscPrice: accommodation.discPrice,
             DiscPriceStart: accommodation.discDateStart,
             DiscPriceEnd: accommodation.discDateEnd,
+            DiscWeekend: accommodation.discWeekend,
             PayPer: accommodation.payPer
         }
 

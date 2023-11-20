@@ -9,7 +9,7 @@ export class Accommodation{
     discPrice: number;
     discDateStart: Date;
     discDateEnd: Date;
-    discWeekend: boolean;
+    discWeekend: number;
     payPer: number;
     constructor() {
         this.Owner = ""
@@ -22,7 +22,7 @@ export class Accommodation{
         this.discPrice = 0
         this.discDateStart = new Date()
         this.discDateEnd = new Date()
-        this.discWeekend= false
+        this.discWeekend= 0
         this.payPer = 0
       }
 }

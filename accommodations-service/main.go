@@ -5,7 +5,6 @@ import (
 	"accommodations-service/repositories"
 	"context"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -47,9 +46,9 @@ func main() {
 	router.POST("/", accommodationHandler.PostAccommodation)
 	router.GET("/", accommodationHandler.GetAllAccommodations)
 
-	router.Run(":8000")
+	router.Run(":" + port)
 
-	server := http.Server{
+	/*server := http.Server{
 		Addr:         ":" + port,
 		IdleTimeout:  120 * time.Second,
 		ReadTimeout:  1 * time.Second,
@@ -63,7 +62,7 @@ func main() {
 		if err != nil {
 			logger.Fatal(err)
 		}
-	}()
+	}()*/
 
 	sigCh := make(chan os.Signal)
 	signal.Notify(sigCh, os.Interrupt)
@@ -73,8 +72,8 @@ func main() {
 	logger.Println("Received terminate, graceful shutdown", sig)
 
 	//Try to shutdown gracefully
-	if server.Shutdown(timeoutContext) != nil {
-		logger.Fatal("Cannot gracefully shutdown...")
-	}
+	//if server.Shutdown(timeoutContext) != nil {
+	//	logger.Fatal("Cannot gracefully shutdown...")
+	//}
 
 }

@@ -66,16 +66,16 @@
                         Price can't be negative!
                       </div>
                     </div>
-                    <div class="form-group"> <!--verovatno neispravno, treba konverzija is JS "Date" formata u Go "Time" format-->
+                    <div class="form-group">
                       <label for="discDateStart">Discount start date:</label>
                       <input type="date" class="form-control" [(ngModel)]="accommodation.discDateStart"
                              formControlName="discDateStart">
                     </div>
-                    <div class="form-group"> <!--verovatno neispravno, treba konverzija is JS "Date" formata u Go "Time" format-->
+                    <div class="form-group">
                       <label for="discDateEnd">Discount end date:</label>
                       <input type="date" class="form-control" [(ngModel)]="accommodation.discDateEnd"
                              formControlName="discDateEnd">
-                      <div *ngIf="(accommodation.discDateStart.getTime()<accommodation.discDateEnd.getTime()) && submitted" style="color: red;">
+                      <div *ngIf="(accommodation.discDateStart.getTime()>accommodation.discDateEnd.getTime()) && submitted" style="color: red;">
                         Start date can't be after end date!
                       </div>
                     </div>

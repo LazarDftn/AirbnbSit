@@ -20,7 +20,7 @@ type Accommodation struct {
 	DiscPrice     int                `bson:"discPrice" json:"discPrice"`         //cena sa popustom
 	DiscDateStart time.Time          `bson:"discDateStart" json:"discDateStart"` //pocetak vremenskog perioda popusta
 	DiscDateEnd   time.Time          `bson:"discDateEnd" json:"discDateEnd"`     //kraj vremenskog perioda popusta
-	DiscWeekend   int                `bson:"discWeekend" json:"discWeekend"`     //ponavljajuci popust vikendom
+	DiscWeekend   int                `bson:"discWeekend" json:"discWeekend"`     //ponavljajuci popust vikendom, 0=ne, 1=da
 	PayPer        int                `bson:"payPer" json:"payPer"`               //nacin placanja, 0=ukupno, 1=po osobi
 }
 

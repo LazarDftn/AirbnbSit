@@ -41,4 +41,23 @@ export class AuthService {
       .pipe(map(() => {
       }));
     } 
+
+    verifyEmail(username: any, code: any){
+
+      var userDTO = {
+        verifUsername: username,
+        code: code
+      }
+
+      console.log(username)
+      console.log(code)
+      
+      const postHeaders = new HttpHeaders({
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      });
+      return this.apiService.post(this.config.verify_email_url, JSON.stringify(userDTO), postHeaders)
+      .pipe(map(() => {
+      }));
+    }
   }

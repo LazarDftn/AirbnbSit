@@ -56,6 +56,8 @@ func Signup() gin.HandlerFunc {
 			return
 		}
 
+		user.Is_verified = false
+
 		validationErr := validate.Struct(user)
 		if validationErr != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
@@ -93,15 +95,11 @@ func Signup() gin.HandlerFunc {
 		user.Refresh_token = &refreshToken
 
 		var code = utils.GenerateRandomString(8)
-		verif := struct {
-			username *string
-			code     string
-		}{
-			username: user.Username,
-			code:     code,
-		}
+		var userVerif models.UserVerifModel
+		userVerif.VerifUsername = user.Username
+		userVerif.Code = &code
 
-		emailVerifCollection.InsertOne(ctx, verif)
+		emailVerifCollection.InsertOne(ctx, userVerif)
 		helper.SendVerifEmail(user, code)
 
 		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
@@ -218,5 +216,42 @@ func GetUser() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, user)
+	}
+}
+
+func VerifyAccount() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		var user models.UserVerifModel
+		var foundUser models.UserVerifModel
+
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		err := emailVerifCollection.FindOne(ctx, bson.M{"verifUsername": user.VerifUsername, "code": user.Code}).Decode(&foundUser)
+		defer cancel()
+		if err != nil {
+			fmt.Print(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "This user is already verified or isn't registered yet!"})
+			return
+		}
+
+		filter := bson.D{{"username", user.VerifUsername}}
+		update := bson.D{{"$set",
+			bson.D{
+				{"is_verified", true},
+			},
+		}}
+		_, errr := userCollection.UpdateOne(ctx, filter, update)
+		if errr != nil {
+			fmt.Print(errr)
+		}
+
+		emailVerifCollection.DeleteOne(ctx, bson.D{{"verifUsername", user.VerifUsername}})
+
+		c.JSON(http.StatusOK, "")
 	}
 }

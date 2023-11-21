@@ -14,6 +14,7 @@ import { AccommodationService } from './services/accommodation.service';
 import { ConfigService } from './services/config.service';
 import { HttpClient, HttpClientModule, HttpHandler } from '@angular/common/http';
 import { AuthService } from './services/auth.service';
+import { AccountVerifPageComponent } from './components/account-verif-page/account-verif-page.component';
 
 
 @NgModule({
@@ -23,7 +24,8 @@ import { AuthService } from './services/auth.service';
     RegistrationPageComponent,
     WelcomePageComponent,
     NavBarComponent,
-    CreateAccommodationPageComponent
+    CreateAccommodationPageComponent,
+    AccountVerifPageComponent
   ],
   imports: [
     BrowserModule,

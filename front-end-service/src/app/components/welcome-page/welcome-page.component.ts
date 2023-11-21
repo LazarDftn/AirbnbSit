@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'welcome-page',
@@ -6,5 +6,7 @@ import { Component } from '@angular/core';
   styleUrls: ['./welcome-page.component.css']
 })
 export class WelcomePageComponent {
-
+  
 }
+
+

@@ -15,4 +15,5 @@ type User struct {
 	Token         *string            `json:"token"`
 	User_type     *string            `json:"user_type" validate:"required,eq=HOST|eq=GUEST"`
 	Refresh_token *string            `json:"refresh_token"`
+	Is_verified   *bool              `json:"is_verified"`
 }

@@ -12,8 +12,29 @@ require (
 )
 
 require (
+	github.com/fatih/color v1.7.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.7 // indirect
+	github.com/hashicorp/go-hclog v0.15.0 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/lib/pq v1.8.0 // indirect
+	github.com/magiconair/properties v1.8.1 // indirect
+	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mitchellh/mapstructure v1.1.2 // indirect
+	github.com/pelletier/go-toml v1.7.0 // indirect
+	github.com/spf13/afero v1.1.2 // indirect
+	github.com/spf13/cast v1.3.0 // indirect
+	github.com/spf13/jwalterweatherman v1.0.0 // indirect
+	github.com/spf13/pflag v1.0.3 // indirect
+	github.com/spf13/viper v1.7.1 // indirect
+	github.com/subosito/gotenv v1.2.0 // indirect
+	gopkg.in/ini.v1 v1.51.0 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
+)
+
+require (
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
+	github.com/d-vignesh/go-jwt-auth v0.0.0-20201213154834-8d28638128fe
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect

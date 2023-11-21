@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/d-vignesh/go-jwt-auth/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +21,7 @@ import (
 )
 
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
+var emailVerifCollection *mongo.Collection = database.OpenCollection(database.Client, "emailVerif")
 var validate = validator.New()
 
 func HashPassword(password string) string {
@@ -89,6 +91,18 @@ func Signup() gin.HandlerFunc {
 		token, refreshToken, _ := helper.GenerateAllTokens(*user.Email, *user.First_name, *user.Last_name, *user.User_type, user.ID.Hex())
 		user.Token = &token
 		user.Refresh_token = &refreshToken
+
+		var code = utils.GenerateRandomString(8)
+		verif := struct {
+			username *string
+			code     string
+		}{
+			username: user.Username,
+			code:     code,
+		}
+
+		emailVerifCollection.InsertOne(ctx, verif)
+		helper.SendVerifEmail(user, code)
 
 		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
 		if insertErr != nil {

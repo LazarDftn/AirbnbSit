@@ -28,7 +28,8 @@ export class AuthService {
         address: user.address,
         token: "",
         user_type: user.type,
-        refresh_token:""
+        refresh_token: "",
+        is_verified: false
       }
       
       console.log(user)

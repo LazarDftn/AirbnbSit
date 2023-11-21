@@ -6,6 +6,7 @@ export class User{
     email: string;
     address: string;
     type: string;
+    isVerified: boolean
     constructor(){
         this.fName = ""
         this.lName = ""
@@ -14,5 +15,6 @@ export class User{
         this.email = ""
         this.address = ""
         this.type = ""
+        this.isVerified = false
     }
 }

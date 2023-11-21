@@ -27,6 +27,14 @@
                         <input type="checkbox" class="form-check-input" id="rememberMe">
                         <label class="form-check-label" for="rememberMe">Remember me</label>
                     </div>
+                    <div class="captchaBox">
+                        <form [formGroup]="aFormGroup">
+                            <ngx-recaptcha2 #captchaElem
+                              [siteKey]="siteKey"
+                              formControlName="recaptcha">
+                            </ngx-recaptcha2>
+                          </form>
+                    </div>
                     <button type="submit" class="btn btn-primary w-100">Login</button>
                     <span class="center margin-top">Don't have an account yet? <a class="sign-up-link" routerLink="/registration-page">Sign Up!</a></span>
 

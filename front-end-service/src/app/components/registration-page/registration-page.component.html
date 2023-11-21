@@ -56,7 +56,7 @@
                             <label for="Username">Username:</label>
                             <input class="form-control" formControlName="username" placeholder="Enter your Unique Username" [(ngModel)]="user.username" required>
                             <div *ngIf="userForm.controls['username'].errors?.['required'] && submitted" style="color:red;">
-                                Please enter a calid username!
+                                Please enter a valid username!
                               </div>
                         </div>
             
@@ -64,7 +64,7 @@
                             <label for="password">Password:</label>
                             <input type="password" class="form-control" formControlName="password" 
                             placeholder="Password must be at least 12 characters long, one uppercase and lowercase letter, a number and sign" [(ngModel)]="user.password" required>
-                            <div *ngIf="!this.validatePassword(this.user.password) && submitted" style="color:red;">
+                            <div *ngIf="!this.validatePassword(this.user.password) && submitted" style="color:red; font-size:11px;">
                                 Password must be at least
                             12 characters long, one uppercase and lowercase letter, a number and sign!
                               </div>

@@ -15,6 +15,7 @@ import { ConfigService } from './services/config.service';
 import { HttpClient, HttpClientModule, HttpHandler } from '@angular/common/http';
 import { AuthService } from './services/auth.service';
 
+import { NgxCaptchaModule } from 'ngx-captcha';
 
 @NgModule({
   declarations: [
@@ -30,7 +31,8 @@ import { AuthService } from './services/auth.service';
     AppRoutingModule,
     FormsModule,
     ReactiveFormsModule,
-    HttpClientModule
+    HttpClientModule,
+    NgxCaptchaModule
   ],
   providers: [ApiService,
     AccommodationService,

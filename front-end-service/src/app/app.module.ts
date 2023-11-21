@@ -13,6 +13,7 @@ import { ApiService } from './services/api.service';
 import { AccommodationService } from './services/accommodation.service';
 import { ConfigService } from './services/config.service';
 import { HttpClient, HttpClientModule, HttpHandler } from '@angular/common/http';
+import { AuthService } from './services/auth.service';
 
 
 @NgModule({
@@ -33,7 +34,8 @@ import { HttpClient, HttpClientModule, HttpHandler } from '@angular/common/http'
   ],
   providers: [ApiService,
     AccommodationService,
-    ConfigService],
+    ConfigService,
+    AuthService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

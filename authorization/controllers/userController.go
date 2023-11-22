@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/d-vignesh/go-jwt-auth/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +21,7 @@ import (
 )
 
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
+var emailVerifCollection *mongo.Collection = database.OpenCollection(database.Client, "emailVerif")
 var validate = validator.New()
 
 func HashPassword(password string) string {
@@ -53,6 +55,8 @@ func Signup() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		user.Is_verified = false
 
 		validationErr := validate.Struct(user)
 		if validationErr != nil {
@@ -89,6 +93,14 @@ func Signup() gin.HandlerFunc {
 		token, refreshToken, _ := helper.GenerateAllTokens(*user.Email, *user.First_name, *user.Last_name, *user.User_type, user.ID.Hex())
 		user.Token = &token
 		user.Refresh_token = &refreshToken
+
+		var code = utils.GenerateRandomString(8)
+		var userVerif models.UserVerifModel
+		userVerif.VerifUsername = user.Username
+		userVerif.Code = &code
+
+		emailVerifCollection.InsertOne(ctx, userVerif)
+		helper.SendVerifEmail(user, code)
 
 		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
 		if insertErr != nil {
@@ -204,5 +216,42 @@ func GetUser() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, user)
+	}
+}
+
+func VerifyAccount() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		var user models.UserVerifModel
+		var foundUser models.UserVerifModel
+
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		err := emailVerifCollection.FindOne(ctx, bson.M{"verifUsername": user.VerifUsername, "code": user.Code}).Decode(&foundUser)
+		defer cancel()
+		if err != nil {
+			fmt.Print(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "This user is already verified or isn't registered yet!"})
+			return
+		}
+
+		filter := bson.D{{"username", user.VerifUsername}}
+		update := bson.D{{"$set",
+			bson.D{
+				{"is_verified", true},
+			},
+		}}
+		_, errr := userCollection.UpdateOne(ctx, filter, update)
+		if errr != nil {
+			fmt.Print(errr)
+		}
+
+		emailVerifCollection.DeleteOne(ctx, bson.D{{"verifUsername", user.VerifUsername}})
+
+		c.JSON(http.StatusOK, "")
 	}
 }

@@ -16,24 +16,27 @@ export class RegistrationPageComponent {
   submitted: boolean = false;
 
   constructor(private authService: AuthService,
-    private fb: FormBuilder){}
+    private fb: FormBuilder) { }
 
   ngOnInit(): void {
     this.buildForm();
   }
 
-  public onSubmit(){
+  public onSubmit() {
     this.submitted = true
     if (this.userForm.valid && this.validatePassword(this.user.password)
-    && this.validateEmail(this.user.email)) {
-  console.log(this.user)
+      && this.validateEmail(this.user.email)) {
+      // window.location.reload(); //page reload   
+      // mislim da bi trebalo da ako je uspesna registacija ga prebaci na drugu stranicu
+      alert("Registration Successfull!")
+      console.log(this.user)
       this.user.type = "HOST" //create a question for user what he wants to be
       this.authService.signup(this.user).subscribe(data => {
-        
+
       }
-      , error =>{
-        this.signupError = error.error.error;
-      });
+        , error => {
+          this.signupError = error.error.error;
+        });
     } else {
       console.log(this.userForm.valid)
     }
@@ -51,7 +54,7 @@ export class RegistrationPageComponent {
   }
 
   validateEmail(email: string): boolean {
-    if (!email.includes("@") || !email.includes(".")){
+    if (!email.includes("@") || !email.includes(".")) {
       return false
     }
     return true
@@ -59,7 +62,7 @@ export class RegistrationPageComponent {
 
   validatePassword(password: string): boolean {
 
-    if (password.length < 12){
+    if (password.length < 12) {
       return false;
     }
 
@@ -86,4 +89,4 @@ export class RegistrationPageComponent {
   }
 }
 
-  
+

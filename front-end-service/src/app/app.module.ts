@@ -17,6 +17,7 @@ import { AuthService } from './services/auth.service';
 import { AccountVerifPageComponent } from './components/account-verif-page/account-verif-page.component';
 
 import { NgxCaptchaModule } from 'ngx-captcha';
+import { SearchAccommodationPageComponent } from './components/search-accommodation-page/search-accommodation-page.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +27,8 @@ import { NgxCaptchaModule } from 'ngx-captcha';
     WelcomePageComponent,
     NavBarComponent,
     CreateAccommodationPageComponent,
-    AccountVerifPageComponent
+    AccountVerifPageComponent,
+    SearchAccommodationPageComponent
   ],
   imports: [
     BrowserModule,

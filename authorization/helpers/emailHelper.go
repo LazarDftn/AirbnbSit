@@ -30,3 +30,27 @@ func SendVerifEmail(user models.User, code string) {
 	}
 
 }
+
+func SendVerifPasswordCode(email string, code string) {
+
+	auth := smtp.PlainAuth("Marko Markovic", "soanosqlibmrs@gmail.com", "lqsiryrgbrjiofdz", "smtp.gmail.com")
+
+	to := []string{email}
+
+	subject := "Subject: Change AirBnb clone password\n"
+	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+	body := "<html><body><h3>Your password recovery code is " + code + "</h3>" +
+		"<br><h4>You have only 60 seconds to use this code before it expires!</h4></body></html>"
+
+	msg := []byte(subject + mime + body)
+
+	err := smtp.SendMail("smtp.gmail.com:587", auth, "Airbnb clone", to, msg)
+
+	if err != nil {
+
+		log.Fatal(err)
+		fmt.Print(err)
+
+	}
+
+}

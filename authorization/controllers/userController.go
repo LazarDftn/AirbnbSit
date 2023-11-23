@@ -255,3 +255,39 @@ func VerifyAccount() gin.HandlerFunc {
 		c.JSON(http.StatusOK, "")
 	}
 }
+
+func CreatePasswordRecoveryCode() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		var foundUser models.User
+		var email string
+
+		if err := c.ShouldBindJSON(email); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var user = userCollection.FindOne(ctx, bson.M{"Email": foundUser.Email}).Decode(&foundUser)
+		defer cancel()
+		if user == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "User with this email address doesn't exist!"})
+			return
+		}
+
+		/*for every new password code request, delete the existing code even
+		if it didn't expire yet*/
+		emailVerifCollection.DeleteOne(ctx, bson.D{{"verifUsername", email}})
+
+		var code = utils.GenerateRandomString(8)
+		var userVerif models.UserVerifModel
+		userVerif.VerifUsername = &email
+		userVerif.Code = &code
+		t := time.Now().UTC()
+		userVerif.Created_at = &t
+
+		emailVerifCollection.InsertOne(ctx, userVerif)
+
+		c.JSON(http.StatusOK, "")
+	}
+}

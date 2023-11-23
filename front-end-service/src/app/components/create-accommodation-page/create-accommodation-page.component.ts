@@ -32,11 +32,17 @@ export class CreateAccommodationPageComponent {
 
   private buildForm() {
     this.accommForm = this.fb.group({
-      name: ["Name field is requried!", Validators.required],
-      location: ["Location field is requried!", Validators.required],
+      name: ["Name field is required!", Validators.required],
+      location: ["Location field is required!", Validators.required],
       benefits: [],
       minCapacity: ["Minimum capacity can't be below 1!", Validators.min(1)],
-      maxCapacity: []
+      maxCapacity: [],
+      price: ["Price can't be negative!", Validators.min(0)],
+      discPrice: ["Price can't be negative!", Validators.min(0)],
+      discDateStart: [],
+      discDateEnd: ["Start date can't be after end date!", Validators.min(this.accommodation.discDateEnd.getTime())],
+      discWeekend:[],
+      payPer: []
     });
   }
   

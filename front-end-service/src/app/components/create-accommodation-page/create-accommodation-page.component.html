@@ -15,7 +15,7 @@
                 <form id="createAccommForm" [formGroup]="accommForm" (ngSubmit)="onSubmit()">
                     <div class="form-group">
                         <label for="name">Name:</label>
-                        <input type="name" class="form-control" [(ngModel)]="accommodation.name" 
+                        <input type="name" class="form-control" [(ngModel)]="accommodation.name"
                         formControlName="name" placeholder="Enter name" required>
                             <div *ngIf="accommForm.controls['name'].errors?.['required'] && submitted" style="color:red;">
                             Please enter a Name!
@@ -23,7 +23,7 @@
                     </div>
                     <div class="form-group">
                         <label for="location">Location:</label>
-                        <input type="location" class="form-control" [(ngModel)]="accommodation.location" 
+                        <input type="location" class="form-control" [(ngModel)]="accommodation.location"
                         formControlName="location" placeholder="Enter location" required>
                         <div *ngIf="accommForm.controls['location'].errors?.['required'] && submitted" style="color:red;">
                             Please enter a Location!
@@ -44,11 +44,54 @@
                     </div>
                     <div class="form-group">
                         <label for="maxCapacity">Maximum capacity:</label>
-                        <input type="number" class="form-control" [(ngModel)]="accommodation.maxCapacity" 
+                        <input type="number" class="form-control" [(ngModel)]="accommodation.maxCapacity"
                         formControlName="maxCapacity" placeholder="Enter maximum capacity" required>
                         <div *ngIf="(accommodation.maxCapacity < accommodation.minCapacity) && submitted" style="color:red;">
                             Maximum capacity can't be below minimum capacity!
                           </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="price">Price:</label>
+                      <input type="number" class="form-control" [(ngModel)]="accommodation.price"
+                      formControlName="price" placeholder="Enter price" required>
+                      <div *ngIf="(accommodation.price < 0) && submitted" style="color: red;">
+                        Price can't be negative!
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="discPrice">Discounted price:</label>
+                      <input type="number" class="form-control" [(ngModel)]="accommodation.discPrice"
+                             formControlName="discPrice" placeholder="Enter discounted price">
+                      <div *ngIf="(accommodation.discPrice < 0) && submitted" style="color: red;">
+                        Price can't be negative!
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="discDateStart">Discount start date:</label>
+                      <input type="date" class="form-control" [(ngModel)]="accommodation.discDateStart"
+                             formControlName="discDateStart">
+                    </div>
+                    <div class="form-group">
+                      <label for="discDateEnd">Discount end date:</label>
+                      <input type="date" class="form-control" [(ngModel)]="accommodation.discDateEnd"
+                             formControlName="discDateEnd">
+                      <div *ngIf="(accommodation.discDateStart.getTime()>accommodation.discDateEnd.getTime()) && submitted" style="color: red;">
+                        Start date can't be after end date!
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="payPer">Select payment method:</label>
+                      <select [(ngModel)]="accommodation.payPer" class="form-control" formControlName="payPer">
+                        <option ngValue="0">Per accommodation</option>
+                        <option ngValue="1">Per guest</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="discWeekend">Discount price on weekends?</label>
+                      <select [(ngModel)]="accommodation.discWeekend" class="form-control" formControlName="discWeekend">
+                        <option ngValue="0">No</option>
+                        <option ngValue="1">Yes</option>
+                      </select>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Create</button>
                 </form>

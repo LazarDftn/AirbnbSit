@@ -291,3 +291,62 @@ func CreatePasswordRecoveryCode() gin.HandlerFunc {
 		c.JSON(http.StatusOK, "")
 	}
 }
+
+func ChangePassword() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var userToChangePass models.ChangePasswordModel
+
+		if err := c.ShouldBindJSON(userToChangePass); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		checkError := CheckPasswordRecoveryCode(userToChangePass.Email, userToChangePass.Code)
+
+		if checkError != "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": &checkError})
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		password := HashPassword(*userToChangePass.Password)
+
+		filter := bson.D{{"email", userToChangePass.Email}}
+		update := bson.D{{"$set",
+			bson.D{
+				{"password", password},
+			},
+		}}
+		_, errr := userCollection.UpdateOne(ctx, filter, update)
+		if errr != nil {
+			fmt.Print(errr)
+		}
+
+		c.JSON(http.StatusOK, "")
+
+	}
+}
+
+func CheckPasswordRecoveryCode(email *string, code *string) string {
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	var foundVerifUser models.UserVerifModel
+	err := emailVerifCollection.FindOne(ctx, bson.M{"verifUsername": email, "code": code}).Decode(&foundVerifUser)
+
+	if err != nil {
+		return "Wrong code!"
+	}
+
+	t1 := time.Now().UTC()
+	t2 := foundVerifUser.Created_at.Add(time.Second * 60)
+
+	if t1.After(t2) {
+		emailVerifCollection.DeleteOne(ctx, bson.D{{"verifUsername", email}, {"code", code}})
+		return "Code expired!"
+	}
+
+	return ""
+}

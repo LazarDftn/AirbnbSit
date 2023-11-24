@@ -8,8 +8,13 @@ import (
 	"net/smtp"
 )
 
+// sends the email with account verification link
 func SendVerifEmail(user models.User, code string) {
 
+	/* There needs to be an administrator who sends these emails to users
+	   and this is how AirBnb 'logs in' to his account (this 16 char string
+	   isn't the actual password but a password that Gmail generated for
+	   third party applications that want to use it, like this)*/
 	auth := smtp.PlainAuth("Marko Markovic", "soanosqlibmrs@gmail.com", "lqsiryrgbrjiofdz", "smtp.gmail.com")
 
 	to := []string{*user.Email}
@@ -31,7 +36,11 @@ func SendVerifEmail(user models.User, code string) {
 
 }
 
+// sends the email with password recovery code
 func SendVerifPasswordCode(email string, code string) {
+
+	fmt.Print(email)
+	fmt.Print(code)
 
 	auth := smtp.PlainAuth("Marko Markovic", "soanosqlibmrs@gmail.com", "lqsiryrgbrjiofdz", "smtp.gmail.com")
 

@@ -26,7 +26,6 @@ export class RegistrationPageComponent {
     this.submitted = true
     if (this.userForm.valid && this.validatePassword(this.user.password)
     && this.validateEmail(this.user.email)) {
-  console.log(this.user)
       this.user.type = "HOST" //create a question for user what he wants to be
       this.authService.signup(this.user).subscribe(data => {
         

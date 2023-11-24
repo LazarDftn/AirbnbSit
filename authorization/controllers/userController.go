@@ -256,67 +256,92 @@ func VerifyAccount() gin.HandlerFunc {
 	}
 }
 
+// user sends a request for a password Recovery code email
 func CreatePasswordRecoveryCode() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		var foundUser models.User
-		var email string
 
-		if err := c.ShouldBindJSON(email); err != nil {
+		var email models.EmailModel
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		if err := c.ShouldBindJSON(&email); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		var user = userCollection.FindOne(ctx, bson.M{"Email": foundUser.Email}).Decode(&foundUser)
-		defer cancel()
-		if user == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "User with this email address doesn't exist!"})
+		existingEmail := email.Email
+		/* for every new password code request, delete the possibly existing Recovery
+		   code for the given email even if the recovery code didn't expire yet */
+		res, err := emailVerifCollection.DeleteOne(ctx, bson.M{"verifUsername": existingEmail})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+		fmt.Print(res)
+		fmt.Print(res.DeletedCount)
+
+		// search User collection for the account with the given email
+		var userError = userCollection.FindOne(ctx, bson.M{"email": email.Email}).Decode(&foundUser)
+		if userError != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Account with this email doesn't exist!"})
 			return
 		}
 
-		/*for every new password code request, delete the existing code even
-		if it didn't expire yet*/
-		emailVerifCollection.DeleteOne(ctx, bson.D{{"verifUsername", email}})
+		if !foundUser.Is_verified {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "This email isn't verified yet!"})
+			return
+		}
 
+		/* create a user object that holds the generated Recovery code, Code creation time
+		   and Email of the user that wants to change his password */
 		var code = utils.GenerateRandomString(8)
 		var userVerif models.UserVerifModel
-		userVerif.VerifUsername = &email
+		userVerif.VerifUsername = email.Email
 		userVerif.Code = &code
 		t := time.Now().UTC()
 		userVerif.Created_at = &t
 
+		// send the Recovery code to the given email
+		helper.SendVerifPasswordCode(*userVerif.VerifUsername, *userVerif.Code)
+
+		/* save the 'forgot password' user object into a collection that holds the email Verification
+		and password Recovery codes */
 		emailVerifCollection.InsertOne(ctx, userVerif)
 
 		c.JSON(http.StatusOK, "")
 	}
 }
 
-func ChangePassword() gin.HandlerFunc {
+// this handler is called after the user submits his new password with the Recovery code from his email
+func ForgotPassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var userToChangePass models.ChangePasswordModel
+		var userToChangePass models.ForgotPasswordModel
 
-		if err := c.ShouldBindJSON(userToChangePass); err != nil {
+		if err := c.ShouldBindJSON(&userToChangePass); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		checkError := CheckPasswordRecoveryCode(userToChangePass.Email, userToChangePass.Code)
+		var ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		// method that checks if the user submitted the wrong code or the code itself expired (after 1 minute)
+		checkError := CheckPasswordRecoveryCode(userToChangePass.Email, userToChangePass.Code, ctx)
 
 		if checkError != "" {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": &checkError})
 			return
 		}
 
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		defer cancel()
-
 		password := HashPassword(*userToChangePass.Password)
 
-		filter := bson.D{{"email", userToChangePass.Email}}
-		update := bson.D{{"$set",
-			bson.D{
-				{"password", password},
+		// if the Recovery code was correct and didn't expire then change the users old password into the new one
+		filter := bson.D{{Key: "email", Value: userToChangePass.Email}}
+		update := bson.D{{Key: "$set",
+			Value: bson.D{
+				{Key: "password", Value: password},
 			},
 		}}
 		_, errr := userCollection.UpdateOne(ctx, filter, update)
@@ -329,10 +354,9 @@ func ChangePassword() gin.HandlerFunc {
 	}
 }
 
-func CheckPasswordRecoveryCode(email *string, code *string) string {
-	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-	defer cancel()
+func CheckPasswordRecoveryCode(email *string, code *string, ctx context.Context) string {
 
+	// search the user Recovery codes database to see if the given email and code match
 	var foundVerifUser models.UserVerifModel
 	err := emailVerifCollection.FindOne(ctx, bson.M{"verifUsername": email, "code": code}).Decode(&foundVerifUser)
 
@@ -340,11 +364,23 @@ func CheckPasswordRecoveryCode(email *string, code *string) string {
 		return "Wrong code!"
 	}
 
-	t1 := time.Now().UTC()
-	t2 := foundVerifUser.Created_at.Add(time.Second * 60)
+	/* for optimal testing purposes the Recovery code expires after just 60 seconds
+	   but the Code won't actually be deleted from the database after expiration if,
+	   for example, the user requests a Recovery code email but doesn't use it because
+	   he changed his mind or suddenly remembered his old password */
 
-	if t1.After(t2) {
-		emailVerifCollection.DeleteOne(ctx, bson.D{{"verifUsername", email}, {"code", code}})
+	/* TODO see if there is a way to automatically delete these password Recovery codes from
+	   the database in case that users request Codes without sending them for checks */
+	timeOfCodeCheck := time.Now().UTC()
+	timeOfCodeExpiration := foundVerifUser.Created_at.Add(time.Second * 60)
+
+	if timeOfCodeCheck.After(timeOfCodeExpiration) {
+		res, errr := emailVerifCollection.DeleteOne(ctx, bson.D{{Key: "verifUsername", Value: &email}, {Key: "code", Value: code}})
+		fmt.Print(res)
+		fmt.Print(res.DeletedCount)
+		if err != nil {
+			fmt.Print(errr.Error())
+		}
 		return "Code expired!"
 	}
 

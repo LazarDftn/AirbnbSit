@@ -12,4 +12,6 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 	incomingRoutes.POST("/signup", controller.Signup())
 	incomingRoutes.POST("/login", controller.Login())
 	incomingRoutes.POST("/verify-account", controller.VerifyAccount())
+	incomingRoutes.POST("/password-code", controller.CreatePasswordRecoveryCode())
+	incomingRoutes.POST("/forgot-password", controller.ForgotPassword())
 }

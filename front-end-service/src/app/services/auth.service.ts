@@ -32,7 +32,6 @@ export class AuthService {
         is_verified: false
       }
       
-      console.log(user)
       const postHeaders = new HttpHeaders({
         'Accept': 'application/json',
         'Content-Type': 'application/json'
@@ -48,9 +47,6 @@ export class AuthService {
         verifUsername: username,
         code: code
       }
-
-      console.log(username)
-      console.log(code)
       
       const postHeaders = new HttpHeaders({
         'Accept': 'application/json',
@@ -60,4 +56,37 @@ export class AuthService {
       .pipe(map(() => {
       }));
     }
+
+    verifyEmailForPassword(email: string){
+
+      var emailDTO = {
+        email: email
+      }
+
+      const postHeaders = new HttpHeaders({
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      });
+      return this.apiService.post(this.config.password_code_url, JSON.stringify(emailDTO), postHeaders)
+      .pipe(map(() => {
+      }));
+    }
+
+    forgotPassword(email: string, code: string, password: string){
+
+      var forgotPasswordDTO = {
+        email: email,
+        code: code,
+        password: password
+      }
+
+      const postHeaders = new HttpHeaders({
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      });
+      return this.apiService.post(this.config.forgot_password_url, JSON.stringify(forgotPasswordDTO), postHeaders)
+      .pipe(map(() => {
+      }));
+    }
+    
   }

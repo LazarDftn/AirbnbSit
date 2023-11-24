@@ -1,6 +1,6 @@
 package models
 
-type ChangePasswordModel struct {
+type ForgotPasswordModel struct {
 	Email    *string `json:"email"`
 	Code     *string `json:"code"`
 	Password *string `json:"password"`

@@ -88,5 +88,26 @@ export class AuthService {
       .pipe(map(() => {
       }));
     }
+
+    login(data: any){
+
+      var loginUserDTO = {
+        recaptcha: data.recaptcha,
+        email: data.email,
+        password: data.password
+      }
+
+      console.log(loginUserDTO)
+
+      const postHeaders = new HttpHeaders({
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      });
+
+      return this.apiService.post(this.config.login_url, JSON.stringify(loginUserDTO), postHeaders)
+      .pipe(map((data) => {
+        return data
+      }));
+    }
     
   }

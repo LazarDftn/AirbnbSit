@@ -14,28 +14,29 @@
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <h2 class="text-center">Login to AirBnb</h2>
-                <form id="loginForm">
+                <form id="loginForm" [formGroup]="loginForm" (ngSubmit)="onSubmit(loginForm.value)">
+                    <p style="color: red;">{{error}}</p>
                     <div class="form-group">
                         <label for="email">Email:</label>
-                        <input type="email" class="form-control" id="email" placeholder="Enter your email address" required>
+                        <input type="email" class="form-control" formControlName="email" placeholder="Enter your email address" required>
                     </div>
                     <div class="form-group">
                         <label for="password">Password:</label>
-                        <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                        <input type="password" class="form-control" formControlName="password" placeholder="Enter your password" required>
                     </div>
                     <div class="form-group form-check">
                         <input type="checkbox" class="form-check-input" id="rememberMe">
                         <label class="form-check-label" for="rememberMe">Remember me</label>
                     </div>
                     <div class="captchaBox">
-                        <form [formGroup]="aFormGroup">
+                        <form [formGroup]="loginForm">
                             <ngx-recaptcha2 #captchaElem
                               [siteKey]="siteKey"
                               formControlName="recaptcha">
                             </ngx-recaptcha2>
                           </form>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                    <button type="submit" class="btn btn-primary w-100" (click)="onSubmit(loginForm.value)">Login</button>
                     <span class="center margin-top">Don't have an account yet? <a class="sign-up-link" routerLink="/registration-page">Sign Up!</a></span>
                     <br><span class="center margin-top"><a class="sign-up-link" routerLink="/forgot-password-page">Forgot password?</a></span>
                 </form>

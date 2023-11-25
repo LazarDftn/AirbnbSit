@@ -11,6 +11,7 @@ export class ConfigService {
   private _verify_email_url = this._api_url + '/users/verify-account';
   private _password_code_url = this._api_url + '/users/password-code';
   private _forgot_password_url = this._api_url + '/users/forgot-password';
+  private _login_url = this._api_url + '/users/login';
 
   get accommodations_url(): string {
     return this._accommodations_url;
@@ -30,5 +31,9 @@ export class ConfigService {
 
   get forgot_password_url(): string {
     return this._forgot_password_url
+  }
+
+  get login_url(): string {
+    return this._login_url
   }
 }

@@ -118,22 +118,29 @@ func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
-		var user models.User
 		var foundUser models.User
+		var userLogin models.LoginModel
 
-		if err := c.BindJSON(&user); err != nil {
+		if err := c.BindJSON(&userLogin); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
+		fmt.Print(userLogin.Email)
+
+		err := userCollection.FindOne(ctx, bson.M{"email": userLogin.Email}).Decode(&foundUser)
 		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "email or password is incorrect"})
 			return
 		}
 
-		passwordIsValid, msg := VerifyPassword(*user.Password, *foundUser.Password)
+		if !foundUser.Is_verified {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "To sign in you need to verify your account!"})
+			return
+		}
+
+		passwordIsValid, msg := VerifyPassword(*userLogin.Password, *foundUser.Password)
 		if passwordIsValid != true {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return

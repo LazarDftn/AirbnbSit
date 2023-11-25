@@ -7,6 +7,8 @@ export class User{
     address: string;
     type: string;
     isVerified: boolean
+    token: string
+    refreshToken: string
     constructor(){
         this.fName = ""
         this.lName = ""
@@ -16,5 +18,7 @@ export class User{
         this.address = ""
         this.type = ""
         this.isVerified = false
+        this.token = ""
+        this.refreshToken = ""
     }
 }

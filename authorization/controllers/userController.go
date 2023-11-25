@@ -90,7 +90,7 @@ func Signup() gin.HandlerFunc {
 		}
 
 		user.ID = primitive.NewObjectID()
-		token, refreshToken, _ := helper.GenerateAllTokens(*user.Email, *user.First_name, *user.Last_name, *user.User_type, user.ID.Hex())
+		token, refreshToken, _ := helper.GenerateAllTokens(*user.Username, *user.User_type)
 		user.Token = &token
 		user.Refresh_token = &refreshToken
 
@@ -149,7 +149,7 @@ func Login() gin.HandlerFunc {
 		if foundUser.Email == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
 		}
-		token, refreshToken, _ := helper.GenerateAllTokens(*foundUser.Email, *foundUser.First_name, *foundUser.Last_name, *foundUser.User_type, foundUser.ID.Hex())
+		token, refreshToken, _ := helper.GenerateAllTokens(*foundUser.Username, *foundUser.User_type)
 		helper.UpdateAllTokens(token, refreshToken, foundUser.ID.Hex())
 		err = userCollection.FindOne(ctx, bson.M{"user_id": foundUser.ID.Hex()}).Decode(&foundUser)
 

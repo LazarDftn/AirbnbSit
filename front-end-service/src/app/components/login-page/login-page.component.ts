@@ -29,10 +29,11 @@ export class LoginPageComponent implements OnInit {
       this.error = ""
       this.authService.login(loginData).subscribe(data => {
         var user: User = data.body
-        localStorage.setItem("airbnbToken", user.token)
+        localStorage.setItem("airbnbToken", user.token) //set the token and user data in the localStorage when he logs in
+        localStorage.setItem("airbnbUsername", user.username)
+        localStorage.setItem("airbnbRole", data.body.user_type)
       }, err => {
         this.error = err.error.error
-        console.log(err)
       })
     } else {
       this.error = "Please fill out all fields and check that you're not a robot!"

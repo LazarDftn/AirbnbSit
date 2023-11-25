@@ -97,8 +97,6 @@ export class AuthService {
         password: data.password
       }
 
-      console.log(loginUserDTO)
-
       const postHeaders = new HttpHeaders({
         'Accept': 'application/json',
         'Content-Type': 'application/json'

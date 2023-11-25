@@ -24,7 +24,7 @@ export class RegistrationPageComponent {
     this.buildForm();
   }
 
-  public onSubmit(){
+  public onSubmit() {
     this.submitted = true
     if (this.userForm.valid && this.validatePassword(this.user.password)
     && this.validateEmail(this.user.email)) {
@@ -33,9 +33,9 @@ export class RegistrationPageComponent {
         alert("Success! Please go confirm your Email")
         this.router.navigate(['/login-page'])
       }
-      , error =>{
-        this.signupError = error.error.error;
-      });
+        , error => {
+          this.signupError = error.error.error;
+        });
     } else {
       console.log(this.userForm.valid)
     }
@@ -53,7 +53,7 @@ export class RegistrationPageComponent {
   }
 
   validateEmail(email: string): boolean {
-    if (!email.includes("@") || !email.includes(".")){
+    if (!email.includes("@") || !email.includes(".")) {
       return false
     }
     return true
@@ -61,7 +61,7 @@ export class RegistrationPageComponent {
 
   validatePassword(password: string): boolean {
 
-    if (password.length < 12){
+    if (password.length < 12) {
       return false;
     }
 
@@ -88,4 +88,4 @@ export class RegistrationPageComponent {
   }
 }
 
-  
+

@@ -18,6 +18,7 @@ import { AccountVerifPageComponent } from './components/account-verif-page/accou
 
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { ForgotPasswordPageComponent } from './components/forgot-password-page/forgot-password-page.component';
+import { SearchAccommodationPageComponent } from './components/search-accommodation-page/search-accommodation-page.component';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { ForgotPasswordPageComponent } from './components/forgot-password-page/f
     NavBarComponent,
     CreateAccommodationPageComponent,
     AccountVerifPageComponent,
-    ForgotPasswordPageComponent
+    ForgotPasswordPageComponent,
+    SearchAccommodationPageComponent
   ],
   imports: [
     BrowserModule,

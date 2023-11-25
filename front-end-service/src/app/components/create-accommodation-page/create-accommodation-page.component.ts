@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Accommodation } from 'src/app/model/accommodation';
 import { AccommodationService } from 'src/app/services/accommodation.service';
 
@@ -24,7 +25,7 @@ export class CreateAccommodationPageComponent {
   public onSubmit(){
     this.submitted = true
     if (this.accommForm.valid && this.accommodation.maxCapacity >= this.accommodation.minCapacity) {
-    this.accommodationService.create(this.accommodation).subscribe(data => {});
+    this.accommodationService.create(this.accommodation).subscribe(data => {window.location.reload()});
     } else {
       console.error("Form is invalid!");
     }

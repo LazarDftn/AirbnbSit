@@ -1,5 +1,6 @@
 import { Attribute, Component } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validator, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { User } from 'src/app/model/user';
 import { AuthService } from 'src/app/services/auth.service';
 
@@ -16,7 +17,8 @@ export class RegistrationPageComponent {
   submitted: boolean = false;
 
   constructor(private authService: AuthService,
-    private fb: FormBuilder){}
+    private fb: FormBuilder,
+    private router: Router){}
 
   ngOnInit(): void {
     this.buildForm();
@@ -28,7 +30,8 @@ export class RegistrationPageComponent {
     && this.validateEmail(this.user.email)) {
       this.user.type = "HOST" //create a question for user what he wants to be
       this.authService.signup(this.user).subscribe(data => {
-        
+        alert("Success! Please go confirm your Email")
+        this.router.navigate(['/login-page'])
       }
       , error =>{
         this.signupError = error.error.error;

@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -9,7 +10,7 @@ func CheckUserType(c *gin.Context, role string) (err error) {
 	userType := c.GetString("user_type")
 	err = nil
 	if userType != role {
-		err = errors.New("You are unauthorized to access page")
+		err = errors.New("You are don't have " + role + " privileges")
 		return err
 	}
 	return err

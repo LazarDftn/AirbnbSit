@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Authenticate() gin.HandlerFunc {
+func Authenticate(role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientToken := c.Request.Header.Get("token")
 		if clientToken == "" {
@@ -23,6 +23,12 @@ func Authenticate() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		// after authentication if the user action requires a role, check it
+		if role == "HOST" || role == "GUEST" {
+			helper.CheckUserType(c, role)
+		}
+
 		c.Set("username", claims.Username)
 		c.Set("user_type", claims.User_type)
 		c.Next()

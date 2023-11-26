@@ -4,6 +4,7 @@ import { HttpHeaders } from '@angular/common/http';
 import { User } from '../model/user';
 import { ApiService } from './api.service';
 import { ConfigService } from './config.service';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,8 @@ export class AuthService {
 
     constructor(
         private apiService: ApiService,
-        private config: ConfigService
+        private config: ConfigService,
+        private router: Router
       ) {
       }
     
@@ -108,4 +110,30 @@ export class AuthService {
       }));
     }
     
+    logout(){
+      localStorage.removeItem("airbnbToken")
+      localStorage.removeItem("airbnbUsername")
+      localStorage.removeItem("airbnbRole")
+
+      this.router.navigate(['/login-page'])
+    }
+
+    /* details about the Logged user are kept in the local storage.
+       This method should be implemented on pages that require any Role */
+    userIsLoggedIn(): boolean{
+      var role = localStorage.getItem("airbnbRole")
+      if (role == "" || role == null || role == undefined){
+        return false
+      }
+      return true
+    }
+
+    // This method should be implemented on pages that require a certain Role   
+    userHasRole(requiredRole: string): boolean{
+      var role = localStorage.getItem("airbnbRole")
+      if (role == requiredRole){
+        return true
+      }
+      return false
+    }
   }

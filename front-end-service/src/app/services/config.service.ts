@@ -37,6 +37,7 @@ export class ConfigService {
   get login_url(): string {
     return this._login_url
   }
+  
   get display_accommodation_url(): string{
     return this._display_accommodations_url
   }

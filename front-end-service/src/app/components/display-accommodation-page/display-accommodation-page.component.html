@@ -1,10 +1,29 @@
+<nav-bar></nav-bar>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Title</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accommodation display</title>
 </head>
 <body>
-
+<h1 class="text-center">{{name}}Placeholder accomm name</h1>
+<h4 class="text-center">{{location}}Placeholder location</h4>
+<h6 class="text-center">Owner:{{owner}}</h6>
+<br><!--Ovde bi u buducnosti mogla stojati slika-->
+<div class="row justify-content-center">{{benefits}}Very long placeholder string containing all of the benefits of the accommodation</div>
+<div><b class="row justify-content-center">Accommodation capacity:{{minCapacity}}-{{maxCapacity}}</b></div>
+<div><b class="row justify-content-center">Accommodation price:{{price}}</b></div>
+<div><b class="row justify-content-center">Pricing type:
+  <div class="row justify-content-center" *ngIf="payPer=='0'; then oneTime else perPerson"></div>
+  <ng-template #oneTime>One time payment</ng-template>
+  <ng-template #perPerson>Per person</ng-template>
+</b></div>
+<div><b class="row justify-content-center">
+  <div class="row justify-content-center" *ngIf="discPrice!==price">Discounted price of {{discPrice}} available from {{discDateStart}} to {{discDateEnd}}</div>
+</b></div><!--datume mozda treba prevesti u string-->
+<div><b class="row justify-content-center">
+  <div class="row justify-content-center" *ngIf="discWeekend=='1'">Discounted price of {{discPrice}} available on weekends</div>
+</b></div>
 </body>
 </html>

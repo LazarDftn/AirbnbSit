@@ -4,10 +4,12 @@ import (
 	"auth/database"
 	helper "auth/helpers"
 	"auth/models"
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -72,6 +74,37 @@ func Signup() gin.HandlerFunc {
 
 		password := HashPassword(*user.Password)
 		user.Password = &password
+
+		file, err := os.Open("blacklist.txt")
+
+		if err != nil {
+			log.Panic(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while trying to open file"})
+			return
+		}
+
+		scanner := bufio.NewScanner(file)
+		scanner.Split(bufio.ScanLines)
+		var fileLines []string
+
+		for scanner.Scan() {
+			fileLines = append(fileLines, scanner.Text())
+		}
+
+		file.Close()
+
+		var found = ""
+
+		for _, line := range fileLines {
+			if password == line {
+				found = line
+			}
+		}
+
+		if found != "" {
+			log.Panic(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "This password is on Blacklist, please change it"})
+		}
 
 		usernameCount, err := userCollection.CountDocuments(ctx, bson.M{"username": user.Username})
 		if err != nil {

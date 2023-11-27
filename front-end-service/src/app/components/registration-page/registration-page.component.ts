@@ -26,8 +26,25 @@ export class RegistrationPageComponent {
 
   public onSubmit() {
     this.submitted = true
+<<<<<<< Updated upstream
     if (this.userForm.valid && this.validatePassword(this.user.password)
     && this.validateEmail(this.user.email)) {
+=======
+    const blacklist: string[] = ['OvoJeSifra99!', '123456', 'password', '12345678', 'qwerty', '123456789', 
+    '12345', '1234', '111111', '1234567', 'dragon', '123123', 'baseball', 'abc123', 'football'];
+    if (blacklist.includes(this.user.password)) {
+      confirm('⛔️ This password is on BLACKLIST, please change it. ⛔️');
+      // return false;
+    }
+
+    else if (this.userForm.valid && this.validatePassword(this.user.password)
+      && this.validateEmail(this.user.email)) {
+      // window.location.reload(); //page reload   
+      // mislim da bi trebalo da ako je uspesna registacija ga prebaci na drugu stranicu
+      
+      alert("Registration Successfull!")
+      console.log(this.user)
+>>>>>>> Stashed changes
       this.user.type = "HOST" //create a question for user what he wants to be
       this.authService.signup(this.user).subscribe(data => {
         alert("Success! Please go confirm your Email")
@@ -86,6 +103,7 @@ export class RegistrationPageComponent {
     }
     return true
   }
+  
 }
 
 

@@ -27,10 +27,17 @@ export class RegistrationPageComponent {
   public onSubmit() {
 
     this.submitted = true
+    /*const blacklist: string[] = ['OvoJeSifra99!', '123456', 'password', '12345678', 'qwerty', '123456789', 
+    '12345', '1234', '111111', '1234567', 'dragon', '123123', 'baseball', 'abc123', 'football'];
+    if (blacklist.includes(this.user.password)) {
+      confirm('⛔️ This password is on BLACKLIST, please change it. ⛔️');
+      // return false;
+    }
 
+    else*/
     if (this.userForm.valid && this.validatePassword(this.user.password)
-    && this.validateEmail(this.user.email)) {
-
+      && this.validateEmail(this.user.email)) {
+    
       this.authService.signup(this.user).subscribe(data => {
         alert("Success! Please go confirm your Email")
         this.router.navigate(['/login-page'])
@@ -87,6 +94,7 @@ export class RegistrationPageComponent {
     }
     return true
   }
+  
 }
 
 

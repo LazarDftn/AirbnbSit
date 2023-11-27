@@ -73,6 +73,41 @@ func Signup() gin.HandlerFunc {
 		password := HashPassword(*user.Password)
 		user.Password = &password
 
+		/*file, err := os.Open("authorization/controllers/blacklist.txt")
+
+		// Error finding the blacklist.txt file no matter what path we try to use
+
+		if err != nil {
+			log.Panic(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error"})
+			return
+		}
+
+		scanner := bufio.NewScanner(file)
+		scanner.Split(bufio.ScanLines)
+		var fileLines []string
+
+		for scanner.Scan() {
+			fileLines = append(fileLines, scanner.Text())
+		}
+
+		file.Close()
+
+		var found = ""
+
+		for _, line := range fileLines {
+			if strings.Contains(password, line) {
+				found = line
+			}
+		}
+
+		if found != "" {
+			log.Panic(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "This password is on Blacklist, please change it"})
+		}
+
+		*/
+
 		usernameCount, err := userCollection.CountDocuments(ctx, bson.M{"username": user.Username})
 		if err != nil {
 			log.Panic(err)

@@ -25,10 +25,12 @@ export class RegistrationPageComponent {
   }
 
   public onSubmit() {
+
     this.submitted = true
+
     if (this.userForm.valid && this.validatePassword(this.user.password)
     && this.validateEmail(this.user.email)) {
-      this.user.type = "HOST" //create a question for user what he wants to be
+
       this.authService.signup(this.user).subscribe(data => {
         alert("Success! Please go confirm your Email")
         this.router.navigate(['/login-page'])
@@ -36,8 +38,6 @@ export class RegistrationPageComponent {
         , error => {
           this.signupError = error.error.error;
         });
-    } else {
-      console.log(this.userForm.valid)
     }
   }
 
@@ -48,7 +48,8 @@ export class RegistrationPageComponent {
       email: ["", Validators.required],
       address: ["", Validators.required],
       username: ["", Validators.required],
-      password: ["", Validators.required]
+      password: ["", Validators.required],
+      role : ["", Validators.required]
     });
   }
 

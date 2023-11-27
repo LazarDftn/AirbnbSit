@@ -74,11 +74,14 @@
                         <fieldset>
                             <legend>Please select your preferred user role:</legend>
                             <div class="radioBtns">
-                              <input type="radio" id="choice1" name="role" value="guest" checked />
+                              <input type="radio" id="choice1" [(ngModel)]="user.type" formControlName="role" value="GUEST" checked />
                               <label for="choice1" id="choice1Lbl">Guest</label>
                         
-                              <input type="radio" id="choice2" name="role" value="host" />
+                              <input type="radio" id="choice2" [(ngModel)]="user.type" formControlName="role" value="HOST" />
                               <label for="choice2" id="choice2Lbl">Host</label>
+                              <div *ngIf="userForm.controls['role'].errors?.['required'] && submitted" style="color:red; font-size:11px;">
+                                Please choose a role!
+                              </div>
                             </div> 
                           </fieldset>
                     </div>

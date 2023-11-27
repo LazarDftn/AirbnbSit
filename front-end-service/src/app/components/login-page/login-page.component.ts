@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validator, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { User } from 'src/app/model/user';
 import { AuthService } from 'src/app/services/auth.service';
 
@@ -13,7 +14,8 @@ export class LoginPageComponent implements OnInit {
   error = ""
 
   constructor(private formBuilder: FormBuilder,
-    private authService: AuthService){}
+    private authService: AuthService,
+    private router: Router){}
 
   ngOnInit() {
     this.loginForm = this.formBuilder.group({
@@ -32,6 +34,7 @@ export class LoginPageComponent implements OnInit {
         localStorage.setItem("airbnbToken", user.token) //set the token and user data in the localStorage when he logs in
         localStorage.setItem("airbnbUsername", user.username)
         localStorage.setItem("airbnbRole", data.body.user_type)
+        this.router.navigate(['welcome-page'])
       }, err => {
         this.error = err.error.error
       })

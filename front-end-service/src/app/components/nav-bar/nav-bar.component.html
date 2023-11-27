@@ -1,8 +1,8 @@
 <ul>
-    <li><a class="active" href="#">Home</a></li>
-    <li><a href="login-page">Login</a></li>
-    <li><a href="registration-page">Register</a></li>
-    <li><a href="#about">About</a></li>
-    <li><a href="#host">Become a Host</a></li>
-    <li><a href="create-accommodation">Create an accommodation</a></li>
+    <li><a class="active" href="welcome-page">Home</a></li>
+    <li *ngIf="!isUserLoggedIn"><a href="login-page">Log in</a></li>
+    <li *ngIf="!isUserLoggedIn"><a href="registration-page">Register</a></li>
+    <li *ngIf="isUserLoggedIn"><a (click)="logout()" style="cursor: pointer;">Log out</a></li>
+    <li *ngIf="isUserHost"><a href="create-accommodation">Create an accommodation</a></li>
+    <li *ngIf="isUserGuest"><a href="book-accommodation">Book now!</a></li>
   </ul>

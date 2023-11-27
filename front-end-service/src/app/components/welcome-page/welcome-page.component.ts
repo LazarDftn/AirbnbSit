@@ -6,7 +6,7 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./welcome-page.component.css']
 })
 export class WelcomePageComponent {
-  
+  user = localStorage.getItem("airbnbUsername")
 }
 
 

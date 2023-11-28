@@ -24,6 +24,7 @@ export class ForgotPasswordPageComponent {
     this.authService.verifyEmailForPassword(this.email).subscribe(data => {
       this.isEmailDisabled = true
       this.isPassDisabled = false
+      alert("Check email for code! You only have 60 seconds")
     }, err => {
       this.error = err.error.error
     })

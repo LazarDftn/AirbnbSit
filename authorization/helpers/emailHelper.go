@@ -21,7 +21,7 @@ func SendVerifEmail(user models.User, code string) {
 
 	subject := "Subject: Verify AirBnb clone account\n"
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-	body := "<html><body><a href='https://localhost:4200/account/" + *user.Username + "/" + code + "'>Verify account</a></body></html>"
+	body := "<html><body><a href='https://localhost:4200/account/" + *user.Username + "/" + code + "'>https://localhost:4200/account/" + *user.Username + "/" + code + "</a></body></html>"
 
 	msg := []byte(subject + mime + body)
 

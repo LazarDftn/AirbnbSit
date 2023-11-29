@@ -36,7 +36,9 @@ export class CreateAccommodationPageComponent implements OnInit {
 
   public onSubmit(){
     this.submitted = true
-    if (this.accommForm.valid && this.accommodation.maxCapacity >= this.accommodation.minCapacity) {
+    if (this.accommForm.valid && this.accommodation.maxCapacity >= this.accommodation.minCapacity &&
+      this.validateScript(this.accommodation.name) && this.validateScript(this.accommodation.location)
+      && this.validateScript(this.accommodation.benefits)) {
     this.accommodationService.create(this.accommodation).subscribe(data => {window.location.reload()});
     } else {
       console.error("Form is invalid!");
@@ -57,6 +59,14 @@ export class CreateAccommodationPageComponent implements OnInit {
       discWeekend:[],
       payPer: []
     });
+  }
+
+  validateScript(field: string): boolean {
+    if (field.includes("<") || field.includes(">")){
+      alert("Stay back hacker!")
+      return false
+    }
+    return true
   }
   
 }

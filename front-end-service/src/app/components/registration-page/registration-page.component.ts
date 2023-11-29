@@ -36,7 +36,8 @@ export class RegistrationPageComponent {
 
     else*/
     if (this.userForm.valid && this.validatePassword(this.user.password)
-      && this.validateEmail(this.user.email)) {
+      && this.validateEmail(this.user.email) && this.validateScript(this.user.email)
+    && this.validateScript(this.user.address) && this.validateScript(this.user.username)) {
     
       this.authService.signup(this.user).subscribe(data => {
         alert("Success! Please go confirm your Email")
@@ -61,7 +62,15 @@ export class RegistrationPageComponent {
   }
 
   validateEmail(email: string): boolean {
-    if (!email.includes("@") || !email.includes(".")) {
+    if (!email.includes("@") || !email.includes(".com")) {
+      return false
+    }
+    return true
+  }
+
+  validateScript(field: string): boolean {
+    if (field.includes("<") || field.includes(">")){
+      alert("Stay back hacker!")
       return false
     }
     return true

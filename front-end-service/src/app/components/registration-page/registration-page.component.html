@@ -48,7 +48,7 @@
                             <label for="Address">Place of living:</label>
                             <input class="form-control" formControlName="address" placeholder="Enter your Place of Living" [(ngModel)]="user.address" required>
                             <div *ngIf="userForm.controls['address'].errors?.['required'] && submitted" style="color:red;">
-                                Please enter a place of living!
+                                Please enter a valid place of living!
                               </div>
                         </div>
             

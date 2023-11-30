@@ -13,13 +13,6 @@ export class SearchAccommodationPageComponent implements OnInit {
     private router: Router){}
 
   ngOnInit(): void {
-    // auth service checks if the user is logged in and has permission to view this page
-    if (!this.authService.userIsLoggedIn()){
-      this.router.navigate(['/login-page'])
-    }
-    if (!this.authService.userHasRole("GUEST")){
-      this.router.navigate(['/welcome-page'])
-    }
   }
 
 }

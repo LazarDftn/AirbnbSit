@@ -67,7 +67,7 @@ func (rr *ReservationRepo) CreateTables() {
 	// table for reservations that are relevant to an accommodation
 	err := rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
-					(accomm_id text, reservation_id TIMEUUID, guest_email text, host_email text, price int, num_of_People int, begin_date timestamp, end_date timestamp, 
+					(accomm_id text, reservation_id UUID, guest_email text, host_email text, price int, num_of_People int, start_date timestamp, end_date timestamp, 
 					PRIMARY KEY ((accomm_id), reservation_id, guest_email)) 
 					WITH CLUSTERING ORDER BY (reservation_id ASC, guest_email ASC)`,
 			"reservation_by_accommodation")).Exec()
@@ -78,9 +78,9 @@ func (rr *ReservationRepo) CreateTables() {
 	// table for reservations that are relevant to a guest (he wants to see all of the reservations he made)
 	err = rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
-					(guest_email text, reservation_id TIMEUUID, accomm_id text, price int, num_of_People int, begin_date timestamp, end_date timestamp, 
+					(guest_email text, reservation_id UUID, accomm_id text, price int, num_of_People int, start_date timestamp, end_date timestamp, 
 					PRIMARY KEY ((guest_email), reservation_id, accomm_id)) 
-					WITH CLUSTERING ORDER BY (reservation_id ASC, guest_email ASC, accomm_id ASC)`,
+					WITH CLUSTERING ORDER BY (reservation_id ASC, accomm_id ASC)`,
 			"reservation_by_guest")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -89,9 +89,9 @@ func (rr *ReservationRepo) CreateTables() {
 	// table for reservations that are relevant to a host (host wants to see reservations of all his accommodations)
 	err = rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
-					(host_email text, reservation_id TIMEUUID, accomm_id text, price int, num_of_People int, begin_date timestamp, end_date timestamp, 
+					(host_email text, reservation_id UUID, accomm_id text, price int, num_of_People int, start_date timestamp, end_date timestamp, 
 					PRIMARY KEY ((host_email), reservation_id, accomm_id)) 
-					WITH CLUSTERING ORDER BY (reservation_id ASC, host_email ASC, accomm_id ASC)`,
+					WITH CLUSTERING ORDER BY (reservation_id ASC, accomm_id ASC)`,
 			"reservation_by_host")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -106,7 +106,7 @@ func (rr *ReservationRepo) CreateTables() {
 	err = rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(accomm_id text PRIMARY KEY, price int, pay_per int)`,
-			"price_by_acccommodation")).Exec()
+			"price_by_accommodation")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 	}
@@ -116,7 +116,7 @@ func (rr *ReservationRepo) CreateTables() {
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(variation_id UUID, accomm_id text, percentage int, start_date timestamp, end_date timestamp, 
 					PRIMARY KEY ((accomm_id), start_date, end_date, variation_id)) 
-					WITH CLUSTERING ORDER BY (accomm_id ASC, start_date DESC, end_date DESC, variation_id ASC)`,
+					WITH CLUSTERING ORDER BY (start_date DESC, end_date DESC, variation_id ASC)`,
 			"variation_by_accomm_and_interval")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -127,7 +127,7 @@ func (rr *ReservationRepo) CreateTables() {
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(availability_id UUID, accomm_id text, start_date timestamp, end_date timestamp, 
 					PRIMARY KEY ((accomm_id), start_date, end_date, availability_id)) 
-					WITH CLUSTERING ORDER BY (accomm_id ASC, start_date DESC, end_date DESC, availability_id ASC)`,
+					WITH CLUSTERING ORDER BY (start_date DESC, end_date DESC, availability_id ASC)`,
 			"availability_by_accomm_and_interval")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -168,7 +168,7 @@ func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation
 
 func (rr *ReservationRepo) InsertAccommodationPrice(price *domain.AccommPrice) error {
 	err := rr.session.Query(
-		`INSERT INTO price_by_acccommodation (accomm_id, price, pay_per) 
+		`INSERT INTO price_by_accommodation (accomm_id, price, pay_per) 
 		VALUES (?, ?, ?)`,
 		price.AccommID, price.Price, price.PayPer).Exec()
 	if err != nil {
@@ -203,37 +203,40 @@ func (rr *ReservationRepo) GetPriceByAccomm(id string) (*domain.AccommPrice, err
 // create the reservationID in the handler before calling this method
 func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) string {
 
-	var count int
+	// there is no OR statement in cql so the only way I found to check the time overlap is to make 4 queries
+	scanner := rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE accomm_id = ? AND start_date >= ? AND end_date <= ?
+	ALLOW FILTERING`,
+		reservation.AccommID).Iter().Scanner()
 
-	rr.session.Query(`SELECT COUNT(*) FROM reservation WHERE accomm_id = ? AND start_date > ? AND end_date < ?`,
-		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scan(&count)
-
-	if count > 0 {
+	for scanner.Next() {
 		return "That period is occupied"
 	}
 
-	rr.session.Query(`SELECT * FROM reservation WHERE accomm_id = ? AND start_date <= ? AND end_date >= ?`,
-		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scan(&count)
+	scanner = rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE accomm_id = ? AND start_date <= ? AND end_date >= ?
+	ALLOW FILTERING`,
+		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scanner()
 
-	if count > 0 {
+	for scanner.Next() {
 		return "That period is occupied"
 	}
 
-	rr.session.Query(`SELECT * FROM reservation WHERE accomm_id = ? AND start_date >= ? AND start_date <= ?`,
-		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scan(&count)
+	scanner = rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE accomm_id = ? AND start_date >= ? AND start_date <= ?
+	ALLOW FILTERING`,
+		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scanner()
 
-	if count > 0 {
+	for scanner.Next() {
 		return "That period is occupied"
 	}
 
-	rr.session.Query(`SELECT * FROM reservation WHERE accomm_id = ? AND end_date >= ? AND end_date <= ?`,
-		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scan(&count)
+	scanner = rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE accomm_id = ? AND end_date >= ? AND end_date <= ?
+	ALLOW FILTERING`,
+		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scanner()
 
-	if count > 0 {
+	for scanner.Next() {
 		return "That period is occupied"
 	}
 
-	scanner2 := rr.session.Query(`SELECT * FROM price_by_acccommodation WHERE accomm_id = ?`,
+	scanner2 := rr.session.Query(`SELECT * FROM price_by_accommodation WHERE accomm_id = ?`,
 		reservation.AccommID).Iter().Scanner()
 
 	var prices []domain.AccommPrice
@@ -260,7 +263,7 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 	err := rr.session.Query(
 		`INSERT INTO reservation_by_accommodation (accomm_id, reservation_id, start_date, end_date, num_of_people,
 			guest_email, host_email, price) 
-		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		reservation.AccommID, reservation.ReservationID, reservation.StartDate, reservation.EndDate,
 		reservation.NumOfPeople, reservation.GuestEmail, reservation.HostEmail, priceNum).Exec()
 	if err != nil {
@@ -273,14 +276,14 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 func (rr *ReservationRepo) GetReservationsByAccomm(id string) (domain.Reservations, error) {
 
 	scanner := rr.session.Query(`SELECT accomm_id, reservation_id, guest_email, host_email, price, 
-	num_of_People, begin_date, end_date FROM reservation_by_accommodation WHERE accomm_id = ?`,
+	num_of_People, start_date, end_date FROM reservation_by_accommodation WHERE accomm_id = ?`,
 		id).Iter().Scanner()
 
 	var foundReservations domain.Reservations
 	for scanner.Next() {
 		var res domain.Reservation
-		err := scanner.Scan(&res.AccommID, &res.ReservationID, &res.GuestEmail, &res.Price, &res.NumOfPeople,
-			&res.StartDate, &res.EndDate)
+		err := scanner.Scan(&res.AccommID, &res.ReservationID, &res.GuestEmail, &res.HostEmail, &res.Price,
+			&res.NumOfPeople, &res.StartDate, &res.EndDate)
 		if err != nil {
 			rr.logger.Println(err)
 			return nil, err

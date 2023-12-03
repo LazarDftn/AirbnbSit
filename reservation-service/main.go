@@ -35,10 +35,10 @@ func main() {
 	router := gin.Default()
 	//router.Use(accommodationHandler.MiddlewareContentTypeSet(), accommodationHandler.CORSMiddleware())
 	router.POST("/", reservationHandler.PostReservation)
-	router.GET("/accommodation/{accomm_id}", reservationHandler.GetResByAccommodation)
+	router.GET("/accommodation/:accomm_id", reservationHandler.GetResByAccommodation)
 
 	router.POST("/accommodation-price/", reservationHandler.PostPrice)
-	router.GET("/accommodation-price/{accomm_id}", reservationHandler.GetPriceByAccommodation)
+	router.GET("/accommodation-price/:accomm_id", reservationHandler.GetPriceByAccommodation)
 
 	// adding the authorization middleware for Guest and Host, depending on the User action route
 	// router.Use(accommodationHandler.Authorize("HOST")).POST("/create", accommodationHandler.PostAccommodation)

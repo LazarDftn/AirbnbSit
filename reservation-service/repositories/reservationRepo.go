@@ -252,7 +252,7 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 
 	var priceNum int
 
-	if prices[0].PayPer == 1 {
+	if prices[0].PayPer == "per guest" {
 		// check if accommodation payment is per person, then multiply the price with the number of people in the reservation
 		priceNum = prices[0].Price * reservation.NumOfPeople
 	} else {

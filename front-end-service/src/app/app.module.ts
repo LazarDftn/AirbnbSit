@@ -19,6 +19,7 @@ import { AccountVerifPageComponent } from './components/account-verif-page/accou
 import { NgxCaptchaModule } from 'ngx-captcha';
 import { ForgotPasswordPageComponent } from './components/forgot-password-page/forgot-password-page.component';
 import { SearchAccommodationPageComponent } from './components/search-accommodation-page/search-accommodation-page.component';
+import { ViewAccommodationPageComponent } from './components/view-accommodation-page/view-accommodation-page.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +31,8 @@ import { SearchAccommodationPageComponent } from './components/search-accommodat
     CreateAccommodationPageComponent,
     AccountVerifPageComponent,
     ForgotPasswordPageComponent,
-    SearchAccommodationPageComponent
+    SearchAccommodationPageComponent,
+    ViewAccommodationPageComponent
   ],
   imports: [
     BrowserModule,

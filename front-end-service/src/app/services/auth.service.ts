@@ -112,7 +112,7 @@ export class AuthService {
     
     logout(){
       localStorage.removeItem("airbnbToken")
-      localStorage.removeItem("airbnbUsername")
+      localStorage.removeItem("airbnbEmail")
       localStorage.removeItem("airbnbRole")
 
       this.router.navigate(['/login-page'])
@@ -132,6 +132,15 @@ export class AuthService {
     userHasRole(requiredRole: string): boolean{
       var role = localStorage.getItem("airbnbRole")
       if (role == requiredRole){
+        return true
+      }
+      return false
+    }
+
+    //Check if the logged in user is the one who wants to edit his data (profile, accommodation, etc.)
+    userHasEmail(email: string): boolean {
+      var reqEmail = localStorage.getItem("airbnbEmail")
+      if (reqEmail == email){
         return true
       }
       return false

@@ -22,7 +22,7 @@ export class AccommodationService {
       create(accommodation: Accommodation){
         
         var accommDTO = {
-            Owner: localStorage.getItem("airbnbUsername"),
+            Owner: localStorage.getItem("airbnbEmail"),
             Name: accommodation.name,
             Location: accommodation.location,
             Benefits: accommodation.benefits,

@@ -41,6 +41,10 @@ func main() {
 	router.POST("/accommodation-price/", reservationHandler.PostPrice)
 	router.GET("/accommodation-price/:accomm_id", reservationHandler.GetPriceByAccommodation)
 
+	router.POST("/accommodation/price-variation/", reservationHandler.CreatePriceVariation)
+	router.GET("/accommodation/price-variation/:accomm_id", reservationHandler.GetPriceVariationByAccommId)
+	router.POST("/check-price/", reservationHandler.CheckPrice)
+
 	// adding the authorization middleware for Guest and Host, depending on the User action route
 	// router.Use(accommodationHandler.Authorize("HOST")).POST("/create", accommodationHandler.PostAccommodation)
 

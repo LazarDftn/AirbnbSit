@@ -13,22 +13,23 @@
             <div class="col-md-6">
                 <h2 class="text-center">{{accomm.name}}</h2>
                     <div class="form-group">
-                        <label for="name">Location:</label>
-                        <p>{{accomm.location}}
+                        <p>The location is {{accomm.location}}
                     </div>
                     <div class="form-group">
-                        <label for="benefits">Benefits:</label>
                         <p>{{accomm.benefits}}</p>
                     </div>
                     <div class="form-group">
-                        <label for="minCapacity">Capacity:</label>
-                        <p>{{accomm.minCapacity}} - {{accomm.maxCapacity}} people</p>
+                        <p>Guest capacity is {{accomm.minCapacity}} - {{accomm.maxCapacity}} people</p>
                     </div>
                     <div *ngIf="price > 0">
                         <div class="form-group">
                             <label for="minCapacity">Price:</label>
-                            <p>{{accomm.price}} dollars per day {{accomm.payPer}}</p>
+                            <p *ngIf="loadedPrice">{{accomm.price}} dollars per day {{accomm.payPer}}</p>
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <p>Hosts contact: {{accomm.Owner}}
+                        </p>
                     </div>
                     <div *ngIf="price == 0 && this.authService.userHasEmail(this.accomm.Owner)">
                     <div class="form-group">
@@ -48,18 +49,39 @@
                       </div>
                       <button (click)="addPrice()" class="btn btn-primary w-100">Add price</button>
                     </div>
+                    <hr>
+                    <div *ngIf="this.authService.userHasRole('GUEST') && price > 0">
+                    <div class="form-group">
+                        <label for="date">Start date:</label>
+                        <input type="date" class="form-control col-md-6" [(ngModel)]="reservation.startDate"/>
+                        </div>
+                    <div class="form-group">
+                        <label for="date">End date:</label>
+                        <input type="date" class="form-control col-md-6" [(ngModel)]="reservation.endDate"/>
+                    </div>    
+                    <div class="form-group">
+                        <label for="numOfGuests">Number of guests:</label>
+                        <input type="number" class="form-control col-md-6" [(ngModel)]="reservation.numOfPeople"/>
+                    </div> 
+                    <button class="btn btn-primary w-100" (click)="checkPrice()">
+                        Check the price for your stay
+                    </button>
+                </div>
                     <!-- <div *ngIf="accomm.price > 0 && this.authService.userHasEmail(accomm.Owner)">
                             Implement daterange inputs for accommodation unavailability and price changes here
                             (or in another component, I don't know)
                     </div> -->
                 </div>
+                <div class="col-md-6">
                 <h3>Reservations for this home</h3>
                 <div *ngFor="let res of reservations">
+                    <br>
                     <p>from {{ res.startDate }} - {{ res.endDate }} </p>
                     <p *ngIf="this.authService.userHasEmail(accomm.Owner) || this.authService.userHasEmail(res.guestEmail)">
                         {{ res.guestEmail }} - {{ res.numOfPeople }} people - {{ res.price }} dollars
                     </p>
                 </div>
+            </div>
             </div>
     </section>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

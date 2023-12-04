@@ -155,15 +155,38 @@ func (rr *ReservationRepo) CheckExistingForAvailability(availability *domain.Ava
 
 func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation) error {
 	variation.VariationID, _ = gocql.RandomUUID()
+	// pre ovoga ispod dodati uslovni query da proveri da li vec postoji poskupljenje koje se preklapa sa zadatim periodom
 	err := rr.session.Query(
-		`INSERT INTO variation_by_accomm_and_interval (accomm_id, start_date, end_date, variation_id) 
-		VALUES (?, ?, ?, ?)`,
-		variation.AccommID, variation.StartDate, variation.EndDate, variation.VariationID).Exec()
+		`INSERT INTO variation_by_accomm_and_interval (accomm_id, percentage, start_date, end_date, variation_id) 
+		VALUES (?, ?, ?, ?, ?)`,
+		variation.AccommID, variation.Percentage, variation.StartDate, variation.EndDate, variation.VariationID).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 		return err
 	}
 	return nil
+}
+
+func (rr *ReservationRepo) GetVariationsByAccommId(id string) ([]domain.PriceVariation, error) {
+	scanner := rr.session.Query(`SELECT variation_id, accomm_id, percentage, start_date, end_date FROM variation_by_accomm_and_interval 
+	WHERE accomm_id = ?`,
+		id).Iter().Scanner()
+
+	var foundVariations []domain.PriceVariation
+	for scanner.Next() {
+		var pv domain.PriceVariation
+		err := scanner.Scan(&pv.VariationID, &pv.AccommID, &pv.Percentage, &pv.StartDate, &pv.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+			return nil, err
+		}
+		foundVariations = append(foundVariations, pv)
+	}
+	if err := scanner.Err(); err != nil {
+		rr.logger.Println(err)
+		return nil, err
+	}
+	return foundVariations, nil
 }
 
 func (rr *ReservationRepo) InsertAccommodationPrice(price *domain.AccommPrice) error {
@@ -210,33 +233,9 @@ func (rr *ReservationRepo) GetPriceByAccomm(id string) (*domain.AccommPrice, err
 func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) string {
 
 	// there is no OR statement in cql so the only way I found to check the time overlap is to make 4 queries
-	scanner := rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE accomm_id = ? AND start_date >= ? AND end_date <= ?
+	scanner := rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE accomm_id = ? AND start_date <= ? AND end_date >= ?
 	ALLOW FILTERING`,
-		reservation.AccommID).Iter().Scanner()
-
-	for scanner.Next() {
-		return "That period is occupied"
-	}
-
-	scanner = rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE accomm_id = ? AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scanner()
-
-	for scanner.Next() {
-		return "That period is occupied"
-	}
-
-	scanner = rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE accomm_id = ? AND start_date >= ? AND start_date <= ?
-	ALLOW FILTERING`,
-		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scanner()
-
-	for scanner.Next() {
-		return "That period is occupied"
-	}
-
-	scanner = rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE accomm_id = ? AND end_date >= ? AND end_date <= ?
-	ALLOW FILTERING`,
-		reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scanner()
+		reservation.AccommID, reservation.EndDate, reservation.StartDate).Iter().Scanner()
 
 	for scanner.Next() {
 		return "That period is occupied"
@@ -301,4 +300,30 @@ func (rr *ReservationRepo) GetReservationsByAccomm(id string) (domain.Reservatio
 		return nil, err
 	}
 	return foundReservations, nil
+}
+
+func (rr *ReservationRepo) CheckPrice(res domain.Reservation) []domain.PriceVariation {
+
+	var variations []domain.PriceVariation
+
+	scanner := rr.session.Query(`SELECT accomm_id, percentage, start_date, end_date FROM variation_by_accomm_and_interval 
+	WHERE accomm_id = ? AND start_date <= ? AND end_date >= ?
+	ALLOW FILTERING`,
+		res.AccommID, res.EndDate, res.StartDate).Iter().Scanner()
+
+	for scanner.Next() {
+		var variation domain.PriceVariation
+		err := scanner.Scan(&variation.AccommID, &variation.Percentage, &variation.StartDate, &variation.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+			//return nil, err
+		}
+		variations = append(variations, variation)
+	}
+
+	if len(variations) > 0 {
+		return variations
+	} else {
+		return nil
+	}
 }

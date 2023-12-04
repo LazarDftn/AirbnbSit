@@ -21,9 +21,11 @@ export class ViewAccommodationPageComponent implements OnInit {
     price = 0
 
   accomm: Accommodation = new Accommodation()
+  reservation: Reservation = new Reservation()
   reservations: Reservation[] = []
   submitted = false
-  
+  loadedPrice = false
+
   ngOnInit(): void {
 
     var accommId = null
@@ -45,6 +47,7 @@ export class ViewAccommodationPageComponent implements OnInit {
       this.accomm.price = data.price
       this.accomm.payPer = data.payPer
       this.price = data.price
+      this.loadedPrice = true
     })
 
     this.reservationService.getReservationsByAccommId(accommId + "").subscribe(data => {
@@ -54,9 +57,14 @@ export class ViewAccommodationPageComponent implements OnInit {
   }
 
   addPrice(){
-    console.log(this.accomm.price, this.accomm.payPer, this.accomm.Id)
     this.reservationService.createPrice(this.accomm.price, this.accomm.payPer, this.accomm.Id).subscribe
     (data => {window.location.reload()})
+  }
+
+  // before Guest makes the reservation, check service for any price variations for given period and calculate 
+  checkPrice(){
+    this.reservationService.checkPrice(this.accomm.Id, this.reservation.numOfPeople, new Date(this.reservation.startDate),
+      new Date(this.reservation.endDate), this.accomm.price).subscribe(data => {console.log(data)})
   }
 
 }

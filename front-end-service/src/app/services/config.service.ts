@@ -15,6 +15,7 @@ export class ConfigService {
   private _login_url = this._api_url + '/users/login';
   private _accommodation_price_url = this._api_url + '/reservation/accommodation-price/'
   private _reservations_by_accommodation_url = this._api_url + '/reservation/accommodation/'
+  private _check_reservation_price_url = this._api_url + "/reservation/check-price/"
 
   get accommodations_url(): string {
     return this._accommodations_url;
@@ -50,5 +51,9 @@ export class ConfigService {
 
   get reservations_by_accommodation_url(): string {
     return this._reservations_by_accommodation_url
+  }
+
+  get check_reservation_price_url(): string {
+    return this._check_reservation_price_url
   }
 }

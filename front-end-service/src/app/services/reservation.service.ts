@@ -5,6 +5,7 @@ import { Accommodation } from '../model/accommodation';
 import { ApiService } from './api.service';
 import { ConfigService } from './config.service';
 import { AuthService } from './auth.service';
+import { formatDate } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
@@ -47,6 +48,34 @@ export class ReservationService {
         });
 
         return this.apiService.post(this.config.accommodation_price_url, priceDTO, postHeaders)
+        .pipe(map((data) => {
+          return data
+        }));
+      }
+
+      checkPrice(accommId: string, numOfPeople: number, startDate: Date, endDate: Date, price: number){
+
+        var resDTO = {
+          accommId: accommId,
+          guestEmail: "",
+          hostEmail: "",
+          price: price,
+          numOfPeople: numOfPeople,
+          startDate: new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(),
+          startDate.getHours() - 2, startDate.getMinutes(), startDate.getMinutes())),
+          endDate: new Date(Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(),
+          endDate.getHours() - 2, endDate.getMinutes(), endDate.getMinutes()))
+        }
+
+        console.log(resDTO)
+
+        const postHeaders = new HttpHeaders({
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'token': localStorage.getItem("airbnbToken") + ''
+        });
+
+        return this.apiService.post(this.config.check_reservation_price_url, resDTO, postHeaders)
         .pipe(map((data) => {
           return data
         }));

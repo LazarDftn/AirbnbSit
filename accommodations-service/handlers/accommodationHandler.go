@@ -4,6 +4,7 @@ import (
 	"accommodations-service/domain"
 	"accommodations-service/repositories"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -40,8 +41,9 @@ func (a *AccommodationsHandler) PostAccommodation(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	a.repo.Insert(accomm)
-	c.Writer.WriteHeader(http.StatusCreated)
+	res := a.repo.Insert(accomm)
+	e := json.NewEncoder(c.Writer)
+	e.Encode(res)
 }
 
 func (a *AccommodationsHandler) GetAllAccommodations(c *gin.Context) {
@@ -61,6 +63,19 @@ func (a *AccommodationsHandler) GetAllAccommodations(c *gin.Context) {
 		a.logger.Fatal("Unable to convert to json :", err)
 		return
 	}
+
+}
+
+func (a *AccommodationsHandler) GetAccommById(c *gin.Context) {
+
+	id := c.Param("accomm_id")
+
+	accommodation, err := a.repo.GetAccommById(id)
+	if err != nil {
+		a.logger.Print("Database exception: ", err)
+	}
+
+	accommodation.ToJSON(c.Writer)
 
 }
 

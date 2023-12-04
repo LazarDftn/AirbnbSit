@@ -31,7 +31,7 @@ export class AuthService {
         token: "",
         user_type: user.type,
         refresh_token: "",
-        is_verified: false
+        is_verified: true // for testing purposes, later either change this to false or uncomment it on the backend
       }
       
       const postHeaders = new HttpHeaders({

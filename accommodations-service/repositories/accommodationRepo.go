@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -79,7 +80,27 @@ func (ar *AccommodationRepo) GetAll() (domain.Accommodations, error) {
 	return accommodations, nil
 }
 
-func (ar *AccommodationRepo) Insert(accommodation *domain.Accommodation) error {
+func (ar *AccommodationRepo) GetAccommById(id string) (domain.Accommodation, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var accmmodation domain.Accommodation
+
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		log.Println("Invalid id")
+	}
+
+	accommCollection := ar.getCollection()
+	err = accommCollection.FindOne(ctx, bson.M{"_id": objectId}).Decode(&accmmodation)
+	if err != nil {
+		ar.logger.Println(err)
+		return accmmodation, err
+	}
+	return accmmodation, nil
+}
+
+func (ar *AccommodationRepo) Insert(accommodation *domain.Accommodation) interface{} {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	accommCollection := ar.getCollection()
@@ -90,7 +111,7 @@ func (ar *AccommodationRepo) Insert(accommodation *domain.Accommodation) error {
 		return err
 	}
 	ar.logger.Printf("Documents ID: %v\n", result.InsertedID)
-	return nil
+	return result.InsertedID
 }
 
 func (ar *AccommodationRepo) getCollection() *mongo.Collection {

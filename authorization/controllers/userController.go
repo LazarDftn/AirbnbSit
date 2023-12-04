@@ -56,7 +56,7 @@ func Signup() gin.HandlerFunc {
 			return
 		}
 
-		user.Is_verified = false
+		//user.Is_verified = false *FOR TESTING PURPOSES, UNCOMMENT LATER
 
 		validationErr := validate.Struct(user)
 		if validationErr != nil {
@@ -129,13 +129,13 @@ func Signup() gin.HandlerFunc {
 		user.Token = &token
 		user.Refresh_token = &refreshToken
 
-		var code = utils.GenerateRandomString(8)
+		/*var code = utils.GenerateRandomString(8)
 		var userVerif models.UserVerifModel
 		userVerif.VerifUsername = user.Username
 		userVerif.Code = &code
 
 		emailVerifCollection.InsertOne(ctx, userVerif)
-		helper.SendVerifEmail(user, code)
+		helper.SendVerifEmail(user, code) FOR TESTING PURPOSES, UNCOMMENT LATER*/
 
 		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
 		if insertErr != nil {

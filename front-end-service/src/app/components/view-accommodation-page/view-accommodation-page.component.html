@@ -24,29 +24,29 @@
                         <label for="minCapacity">Capacity:</label>
                         <p>{{accomm.minCapacity}} - {{accomm.maxCapacity}} people</p>
                     </div>
-                    <div *ngIf="accomm.price > 0">
+                    <div *ngIf="price > 0">
                         <div class="form-group">
                             <label for="minCapacity">Price:</label>
                             <p>{{accomm.price}} dollars per day {{accomm.payPer}}</p>
                         </div>
                     </div>
-                    <div *ngIf="accomm.price == 0 && this.authService.userHasEmail(accomm.Owner)">
+                    <div *ngIf="price == 0 && this.authService.userHasEmail(this.accomm.Owner)">
                     <div class="form-group">
                         <label for="price">Price:</label>
                         <input type="number" class="form-control" [(ngModel)]="accomm.price"
-                        formControlName="price" placeholder="Enter price" required>
+                        name="price" placeholder="Enter price" required>
                         <div *ngIf="(accomm.price < 0) && submitted" style="color: red;">
                           Price can't be negative!
                         </div>
                       </div>
                       <div class="form-group">
                         <label for="payPer">Select payment method:</label>
-                        <select [(ngModel)]="accomm.payPer" class="form-control" formControlName="payPer">
-                          <option value="">Not per guest</option>
+                        <select [(ngModel)]="accomm.payPer" class="form-control" name="payPer">
+                          <option value="" selected>Not per guest</option>
                           <option value="per guest">Per guest</option>
                         </select>
                       </div>
-                      <button type="submit" class="btn btn-primary w-100">Create</button>
+                      <button (click)="addPrice()" class="btn btn-primary w-100">Add price</button>
                     </div>
                     <!-- <div *ngIf="accomm.price > 0 && this.authService.userHasEmail(accomm.Owner)">
                             Implement daterange inputs for accommodation unavailability and price changes here
@@ -54,10 +54,10 @@
                     </div> -->
                 </div>
                 <h3>Reservations for this home</h3>
-                <div ngFor="let res of reservations">
-                    <p>from {{res.startDate}} - {{res.endDate}} </p>
-                    <p ngIf="this.authService.userHasEmail(accomm.Owner) || this.authService.userHasEmail(res.guestEmail)">
-                        {{res.guestEmail}} - {{res.numOfPeople}} people - {{res.price}} dollars
+                <div *ngFor="let res of reservations">
+                    <p>from {{ res.startDate }} - {{ res.endDate }} </p>
+                    <p *ngIf="this.authService.userHasEmail(accomm.Owner) || this.authService.userHasEmail(res.guestEmail)">
+                        {{ res.guestEmail }} - {{ res.numOfPeople }} people - {{ res.price }} dollars
                     </p>
                 </div>
             </div>

@@ -105,7 +105,7 @@ func (rr *ReservationRepo) CreateTables() {
 	*/
 	err = rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
-					(accomm_id text PRIMARY KEY, price int, pay_per int)`,
+					(accomm_id text PRIMARY KEY, price int, pay_per text)`,
 			"price_by_accommodation")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -197,6 +197,12 @@ func (rr *ReservationRepo) GetPriceByAccomm(id string) (*domain.AccommPrice, err
 		rr.logger.Println(err)
 		return nil, err
 	}
+
+	if len(foundPrices) == 0 {
+		var price *domain.AccommPrice
+		return price, nil
+	}
+
 	return &foundPrices[0], nil
 }
 

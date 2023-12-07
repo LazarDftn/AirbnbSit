@@ -10,6 +10,7 @@ import (
 
 type Reservation struct {
 	ReservationID gocql.UUID `json:"reservationId"`
+	Location      string     `json:"location"`
 	AccommID      string     `json:"accommId"`
 	GuestEmail    string     `json:"guestEmail"`
 	HostEmail     string     `json:"hostEmail"`

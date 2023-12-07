@@ -26,8 +26,8 @@ export class ReservationService {
         }));
       }
 
-      getReservationsByAccommId(id: string){
-        return this.apiService.get(this.config.reservations_by_accommodation_url + id)
+      getReservationsByAccommId(location: string, id: string){
+        return this.apiService.get(this.config.reservations_by_accommodation_url + location + "/" + id)
         .pipe(map((data) => {
           return data
         }));
@@ -53,9 +53,10 @@ export class ReservationService {
         }));
       }
 
-      checkPrice(accommId: string, numOfPeople: number, startDate: Date, endDate: Date, price: number){
+      checkPrice(location: string, accommId: string, numOfPeople: number, startDate: Date, endDate: Date, price: number){
 
         var resDTO = {
+          location: location,
           accommId: accommId,
           guestEmail: "",
           hostEmail: "",
@@ -66,8 +67,6 @@ export class ReservationService {
           endDate: new Date(Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(),
           endDate.getHours() - 2, endDate.getMinutes(), endDate.getMinutes()))
         }
-
-        console.log(resDTO)
 
         const postHeaders = new HttpHeaders({
           'Accept': 'application/json',

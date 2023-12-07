@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"reservation-service/domain"
 	"reservation-service/repositories"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,9 +44,10 @@ func (r *ReservationsHandler) PostReservation(c *gin.Context) {
 
 func (rr *ReservationsHandler) GetResByAccommodation(c *gin.Context) {
 
+	location := c.Param("location")
 	accommId := c.Param("accomm_id")
 
-	reservations, err := rr.repo.GetReservationsByAccomm(accommId)
+	reservations, err := rr.repo.GetReservationsByAccomm(location, accommId)
 	if err != nil {
 		rr.logger.Print("Database exception: ", err)
 	}
@@ -106,17 +108,23 @@ func (rr *ReservationsHandler) CheckPrice(c *gin.Context) {
 
 	variations := rr.repo.CheckPrice(res)
 	if variations != nil {
-		/*price,*/ price, days := CompareAndCalculate(variations[0], res)
-		fmt.Print(price)
-		fmt.Print(days)
+		price, days := CompareAndCalculate(variations, res)
 		retVal := struct {
 			Price       int
-			Percentage  int
-			OverlapDays int
+			Percentages []domain.PriceVariation
+			OverlapDays []int
 		}{
 			Price:       int(price),
-			Percentage:  variations[0].Percentage,
-			OverlapDays: int(days),
+			Percentages: variations,
+			OverlapDays: days,
+		}
+		e := json.NewEncoder(c.Writer)
+		e.Encode(retVal)
+	} else {
+		retVal := struct {
+			Days int
+		}{
+			Days: int(GetNumberOfDays(res.StartDate, res.EndDate)),
 		}
 		e := json.NewEncoder(c.Writer)
 		e.Encode(retVal)
@@ -133,19 +141,21 @@ func (rr *ReservationsHandler) CreatePriceVariation(c *gin.Context) {
 		return
 	}
 
-	err := rr.repo.InsertPriceVariation(&vr)
+	message, err := rr.repo.InsertPriceVariation(&vr)
 	if err != nil {
 		rr.logger.Print("Database exception: ", err)
 		c.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	c.Writer.WriteHeader(http.StatusCreated)
+	e := json.NewEncoder(c.Writer)
+	e.Encode(message)
 }
 
 func (rr *ReservationsHandler) GetPriceVariationByAccommId(c *gin.Context) {
+	location := c.Param("location")
 	accommId := c.Param("accomm_id")
 
-	variations, err := rr.repo.GetVariationsByAccommId(accommId)
+	variations, err := rr.repo.GetVariationsByAccommId(location, accommId)
 	if err != nil {
 		rr.logger.Print("Database exception: ", err)
 	}
@@ -157,22 +167,93 @@ func (rr *ReservationsHandler) GetPriceVariationByAccommId(c *gin.Context) {
 	c.JSON(http.StatusOK, variations)
 }
 
-func CompareAndCalculate(vr domain.PriceVariation, res domain.Reservation) (float64, float64) {
+func CompareAndCalculate(vr []domain.PriceVariation, res domain.Reservation) (float64, []int) {
 
-	resDays := (res.EndDate.Sub(res.StartDate).Hours() + 24) / 24
+	var finalPrice = 0.0
+	var daysToAddVariations []int
+	var sumDaysToAddVariation float64
 
-	daysToAddVariation := math.Min(float64(res.EndDate.Day()), float64(vr.EndDate.Day())) -
-		math.Max(float64(res.StartDate.Day()), float64(vr.StartDate.Day())) + 1
+	resDays := GetNumberOfDays(res.StartDate, res.EndDate)
 
-	percentageIncrease := (float64(100+vr.Percentage) / 100.0) * float64(res.Price)
+	for i := 0; i < len(vr); i++ {
 
-	finalPrice := daysToAddVariation*percentageIncrease + math.Abs(resDays-daysToAddVariation)*float64(res.Price)
+		daysToAddVariation := math.Min(float64(res.EndDate.UnixMilli()/86400000), float64(vr[i].EndDate.UnixMilli()/86400000)) -
+			math.Max(float64(res.StartDate.UnixMilli()/86400000), float64(vr[i].StartDate.UnixMilli()/86400000)) + 1
 
-	return finalPrice, daysToAddVariation
+		percentageIncrease := (float64(100+vr[i].Percentage) / 100.0) * float64(res.Price)
+
+		finalPrice = finalPrice + daysToAddVariation*percentageIncrease
+
+		sumDaysToAddVariation = sumDaysToAddVariation + daysToAddVariation
+
+		daysToAddVariations = append(daysToAddVariations, int(daysToAddVariation))
+	}
+
+	finalPrice = finalPrice + math.Abs(resDays-sumDaysToAddVariation)*float64(res.Price)
+
+	return finalPrice, daysToAddVariations
 
 }
 
-func (a *ReservationsHandler) CORSMiddleware() gin.HandlerFunc {
+func GetNumberOfDays(startDate time.Time, endDate time.Time) float64 {
+
+	return (endDate.Sub(startDate).Hours() + 24) / 24
+}
+
+func (r *ReservationsHandler) CreateAvailability(c *gin.Context) {
+
+	var av domain.Availability
+
+	if err := c.ShouldBindJSON(&av); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	message, err := r.repo.InsertAvailability(&av)
+	if err != nil {
+		r.logger.Print("Database exception: ", err)
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	c.JSON(http.StatusOK, message)
+}
+
+func (r *ReservationsHandler) DeleteAvailability(c *gin.Context) {
+
+	var av domain.Availability
+
+	if err := c.ShouldBindJSON(&av); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	mess := r.repo.DeleteAvailability(&av)
+	if mess != "" {
+		r.logger.Print("Database exception: ", mess)
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	c.JSON(http.StatusOK, nil)
+}
+
+func (r *ReservationsHandler) GetAvailability(c *gin.Context) {
+
+	location := c.Param("location")
+	accommId := c.Param("accomm_id")
+
+	availability, err := r.repo.GetAvailability(location, accommId)
+	if err != nil {
+		r.logger.Print("Database exception: ", err)
+	}
+
+	if availability == nil {
+		return
+	}
+
+	c.JSON(http.StatusOK, availability)
+}
+
+func (r *ReservationsHandler) CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")

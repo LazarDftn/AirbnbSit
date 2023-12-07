@@ -66,6 +66,10 @@
                     <button class="btn btn-primary w-100" (click)="checkPrice()">
                         Check the price for your stay
                     </button>
+                    <br>
+                    <br>
+                    <h4>{{priceMessage}}</h4>
+                    <h4>{{additionalPriceMessage}}</h4>
                 </div>
                     <!-- <div *ngIf="accomm.price > 0 && this.authService.userHasEmail(accomm.Owner)">
                             Implement daterange inputs for accommodation unavailability and price changes here

@@ -43,7 +43,7 @@ export class ViewAccommodationPageComponent implements OnInit {
       this.accomm.location = data.location
       this.accomm.benefits = data.benefits
       this.accomm.Owner = data.owner
-      this.accomm.Id = data.id
+      this.accomm.id = data.id
       this.accomm.minCapacity = data.minCapacity
       this.accomm.maxCapacity = data.maxCapacity
       this.accomm.price = this.price
@@ -64,7 +64,7 @@ export class ViewAccommodationPageComponent implements OnInit {
   }
 
   addPrice(){
-    this.reservationService.createPrice(this.accomm.price, this.accomm.payPer, this.accomm.Id).subscribe
+    this.reservationService.createPrice(this.accomm.price, this.accomm.payPer, this.accomm.id).subscribe
     (data => {window.location.reload()})
   }
 
@@ -75,7 +75,7 @@ export class ViewAccommodationPageComponent implements OnInit {
 
     this.submitted = true
 
-    this.reservationService.checkPrice(this.accomm.location, this.accomm.Id, this.reservation.numOfPeople, new Date(this.reservation.startDate),
+    this.reservationService.checkPrice(this.accomm.location, this.accomm.id, this.reservation.numOfPeople, new Date(this.reservation.startDate),
       new Date(this.reservation.endDate), this.accomm.price).subscribe(data => {
         
       if (data.body.Percentages != null){

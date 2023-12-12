@@ -73,6 +73,15 @@
                     </div>
                 </div>
             </div>
+            <div class="accomms-frame">
+            <div *ngFor="let accomm of accommodations" class="accomm-card">
+                <div class="card" (click)="goTo(accomm)">
+                    <img src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png"/>
+                  <h4>{{accomm.name}}</h4>
+                  <p>{{accomm.location}}</p>
+                </div>
+              </div>
+              </div>
         </div>
     </div>
 </body>

@@ -7,7 +7,7 @@ import { AuthService } from 'src/app/services/auth.service';
 import { ReservationService } from 'src/app/services/reservation.service';
 
 @Component({
-  selector: 'app-view-accommodation-page',
+  selector: 'view-accommodation-page',
   templateUrl: './view-accommodation-page.component.html',
   styleUrls: ['./view-accommodation-page.component.css']
 })

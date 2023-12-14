@@ -53,15 +53,15 @@
                     <div *ngIf="this.authService.userHasRole('GUEST') && price > 0">
                     <div class="form-group">
                         <label for="date">Start date:</label>
-                        <input type="date" class="form-control col-md-6" [(ngModel)]="reservation.startDate"/>
+                        <input [disabled]="submitted" type="date" class="form-control col-md-6" [(ngModel)]="reservation.startDate"/>
                         </div>
                     <div class="form-group">
                         <label for="date">End date:</label>
-                        <input type="date" class="form-control col-md-6" [(ngModel)]="reservation.endDate"/>
+                        <input [disabled]="submitted" type="date" class="form-control col-md-6" [(ngModel)]="reservation.endDate"/>
                     </div>    
                     <div class="form-group">
                         <label for="numOfGuests">Number of guests:</label>
-                        <input type="number" class="form-control col-md-6" [(ngModel)]="reservation.numOfPeople"/>
+                        <input [disabled]="submitted" type="number" class="form-control col-md-6" [(ngModel)]="reservation.numOfPeople"/>
                     </div> 
                     <button class="btn btn-primary w-100" (click)="checkPrice()">
                         Check the price for your stay
@@ -70,6 +70,10 @@
                     <br>
                     <h4>{{priceMessage}}</h4>
                     <h4>{{additionalPriceMessage}}</h4>
+                    <br>
+                    <button *ngIf="submitted" class="btn btn-primary w-30" (click)="makeReservation()">
+                        Book
+                    </button>
                 </div>
                     <!-- <div *ngIf="accomm.price > 0 && this.authService.userHasEmail(accomm.Owner)">
                             Implement daterange inputs for accommodation unavailability and price changes here
@@ -77,14 +81,36 @@
                     </div> -->
                 </div>
                 <div class="col-md-6">
+                <h3>Availability for this home</h3>
+                <div class="dates-box">
+                <div *ngFor="let av of availabilities">
+                    <br>
+                    <p>from {{ av.startDate.toString().slice(0,10) }} to {{ av.endDate.toString().slice(0,10) }} </p>
+                    <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
+                        <button (click)="deleteAvailability(av)">delete</button>
+                    </div>
+                </div>
+                </div>
                 <h3>Reservations for this home</h3>
+                <div class="dates-box">
                 <div *ngFor="let res of reservations">
                     <br>
-                    <p>from {{ res.startDate }} - {{ res.endDate }} </p>
+                    <p>from {{ res.startDate.toString().slice(0,10) }} to {{ res.endDate.toString().slice(0,10) }} </p>
                     <p *ngIf="this.authService.userHasEmail(accomm.Owner) || this.authService.userHasEmail(res.guestEmail)">
-                        {{ res.guestEmail }} - {{ res.numOfPeople }} people - {{ res.price }} dollars
+                        {{ res.guestEmail }} - {{ res.numOfPeople }} people - ${{ res.price }}
                     </p>
                 </div>
+            </div>
+            <h3>Price changes for this home</h3>
+            <div class="dates-box">
+            <div *ngFor="let pv of priceVariations">
+                <br>
+                <p>from {{ pv.startDate.toString().slice(0,10) }} to {{ pv.endDate.toString().slice(0,10) }} increase of {{ pv.percentage }}%</p>
+                <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
+                    <button (click)="deletePriceVariation(pv)">delete</button>
+                </div>
+            </div>
+            </div>
             </div>
             </div>
     </section>

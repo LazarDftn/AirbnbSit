@@ -43,6 +43,7 @@ func main() {
 
 	router.POST("/accommodation/price-variation/", reservationHandler.CreatePriceVariation)
 	router.GET("/accommodation/price-variation/:location/:accomm_id", reservationHandler.GetPriceVariationByAccommId)
+	router.POST("/accommodation/price-variation/delete", reservationHandler.DeletePriceVariation)
 	router.POST("/check-price/", reservationHandler.CheckPrice)
 
 	router.POST("/availability/create", reservationHandler.CreateAvailability)

@@ -16,6 +16,11 @@ export class ConfigService {
   private _accommodation_price_url = this._api_url + '/reservation/accommodation-price/'
   private _reservations_by_accommodation_url = this._api_url + '/reservation/accommodation/'
   private _check_reservation_price_url = this._api_url + "/reservation/check-price/"
+  private _price_variation_url = this._api_url + "/reservation/accommodation/price-variation/"
+  private _availability_url = this._api_url + "/reservation/availability/"
+  private _delete_availability_url = this._api_url + "/reservation/availability/delete"
+  private _delete_price_variation_url = this._api_url + "/reservation/accommodation/price-variation/delete"
+  private _reservation_url = this._api_url + "/reservation/"
 
   get accommodations_url(): string {
     return this._accommodations_url;
@@ -55,5 +60,25 @@ export class ConfigService {
 
   get check_reservation_price_url(): string {
     return this._check_reservation_price_url
+  }
+
+  get price_variation_url(): string {
+    return this._price_variation_url
+  }
+
+  get availabillity_url(): string {
+    return this._availability_url
+  }
+
+  get delete_availability_url(): string {
+    return this._delete_availability_url
+  }
+
+  get delete_price_variation_url(): string {
+    return this._delete_price_variation_url
+  }
+
+  get reservation_url(): string {
+    return this._reservation_url
   }
 }

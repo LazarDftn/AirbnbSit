@@ -35,9 +35,9 @@ func (r *ReservationsHandler) PostReservation(c *gin.Context) {
 	}
 	err := r.repo.InsertReservation(res)
 	if err != "" {
-		r.logger.Print("Database exception: ", err)
-		c.Writer.WriteHeader(http.StatusBadRequest)
-		return
+		r.logger.Print("Database exception: ", res.StartDate)
+		e := json.NewEncoder(c.Writer)
+		e.Encode(res)
 	}
 	c.Writer.WriteHeader(http.StatusCreated)
 }
@@ -164,7 +164,8 @@ func (rr *ReservationsHandler) GetPriceVariationByAccommId(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, variations)
+	e := json.NewEncoder(c.Writer)
+	e.Encode(variations)
 }
 
 func CompareAndCalculate(vr []domain.PriceVariation, res domain.Reservation) (float64, []int) {
@@ -236,6 +237,24 @@ func (r *ReservationsHandler) DeleteAvailability(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
+func (r *ReservationsHandler) DeletePriceVariation(c *gin.Context) {
+
+	var pv domain.PriceVariation
+
+	if err := c.ShouldBindJSON(&pv); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	mess := r.repo.DeletePriceVariation(&pv)
+	if mess != "" {
+		r.logger.Print("Database exception: ", mess)
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	c.JSON(http.StatusOK, nil)
+}
+
 func (r *ReservationsHandler) GetAvailability(c *gin.Context) {
 
 	location := c.Param("location")
@@ -250,7 +269,8 @@ func (r *ReservationsHandler) GetAvailability(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, availability)
+	e := json.NewEncoder(c.Writer)
+	e.Encode(availability)
 }
 
 func (r *ReservationsHandler) CORSMiddleware() gin.HandlerFunc {

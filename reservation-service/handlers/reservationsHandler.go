@@ -6,10 +6,12 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"reservation-service/domain"
 	"reservation-service/repositories"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,6 +22,14 @@ type ReservationsHandler struct {
 	// NoSQL: injecting reservation repository
 	repo *repositories.ReservationRepo
 }
+
+type SignedDetails struct {
+	Username  string
+	User_type string
+	jwt.StandardClaims
+}
+
+var SECRET_KEY string = os.Getenv("SECRET_KEY")
 
 // Injecting the logger makes this code much more testable.
 func NewReservationsHandler(l *log.Logger, r *repositories.ReservationRepo) *ReservationsHandler {
@@ -35,9 +45,9 @@ func (r *ReservationsHandler) PostReservation(c *gin.Context) {
 	}
 	err := r.repo.InsertReservation(res)
 	if err != "" {
-		r.logger.Print("Database exception: ", err)
-		c.Writer.WriteHeader(http.StatusBadRequest)
-		return
+		r.logger.Print("Database exception: ", res.StartDate)
+		e := json.NewEncoder(c.Writer)
+		e.Encode(res)
 	}
 	c.Writer.WriteHeader(http.StatusCreated)
 }
@@ -144,8 +154,8 @@ func (rr *ReservationsHandler) CreatePriceVariation(c *gin.Context) {
 	message, err := rr.repo.InsertPriceVariation(&vr)
 	if err != nil {
 		rr.logger.Print("Database exception: ", err)
-		c.Writer.WriteHeader(http.StatusBadRequest)
-		return
+		e := json.NewEncoder(c.Writer)
+		e.Encode(message)
 	}
 	e := json.NewEncoder(c.Writer)
 	e.Encode(message)
@@ -164,7 +174,8 @@ func (rr *ReservationsHandler) GetPriceVariationByAccommId(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, variations)
+	e := json.NewEncoder(c.Writer)
+	e.Encode(variations)
 }
 
 func CompareAndCalculate(vr []domain.PriceVariation, res domain.Reservation) (float64, []int) {
@@ -212,8 +223,8 @@ func (r *ReservationsHandler) CreateAvailability(c *gin.Context) {
 	message, err := r.repo.InsertAvailability(&av)
 	if err != nil {
 		r.logger.Print("Database exception: ", err)
-		c.Writer.WriteHeader(http.StatusBadRequest)
-		return
+		e := json.NewEncoder(c.Writer)
+		e.Encode(message)
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -236,6 +247,24 @@ func (r *ReservationsHandler) DeleteAvailability(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
+func (r *ReservationsHandler) DeletePriceVariation(c *gin.Context) {
+
+	var pv domain.PriceVariation
+
+	if err := c.ShouldBindJSON(&pv); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	mess := r.repo.DeletePriceVariation(&pv)
+	if mess != "" {
+		r.logger.Print("Database exception: ", mess)
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	c.JSON(http.StatusOK, nil)
+}
+
 func (r *ReservationsHandler) GetAvailability(c *gin.Context) {
 
 	location := c.Param("location")
@@ -250,7 +279,8 @@ func (r *ReservationsHandler) GetAvailability(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, availability)
+	e := json.NewEncoder(c.Writer)
+	e.Encode(availability)
 }
 
 func (r *ReservationsHandler) CORSMiddleware() gin.HandlerFunc {
@@ -267,4 +297,69 @@ func (r *ReservationsHandler) CORSMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func (a *ReservationsHandler) Authorize(role string) gin.HandlerFunc { // Check if user is authorized as Host or Guest depending on the 'role' parameter
+	return func(c *gin.Context) {
+		clientToken := c.Request.Header.Get("token") // get the token from the client
+		if clientToken == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "You are not logged in!"})
+			c.Abort()
+			return
+		}
+
+		claims, err := ValidateToken(clientToken) // check if token is invalid or expired
+		if err != "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			c.Abort()
+			return
+		}
+
+		// If access is available only for hosts check if the user is a host
+		if role == "HOST" && claims.User_type != "HOST" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "You don't have access to Host privileges!"})
+			c.Abort()
+			return
+		}
+
+		// If access is available only for guests check if the user is a guest
+		if role == "GUEST" && claims.User_type != "GUEST" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "You don't have access to Guest privileges!"})
+			c.Abort()
+			return
+		}
+
+		c.Set("username", claims.Username)
+		c.Set("user_type", claims.User_type)
+		c.Next()
+	}
+}
+
+func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
+	token, err := jwt.ParseWithClaims(
+		signedToken,
+		&SignedDetails{},
+		func(token *jwt.Token) (interface{}, error) {
+			return []byte(SECRET_KEY), nil
+		},
+	)
+
+	if err != nil {
+		msg = err.Error()
+		return
+	}
+
+	claims, ok := token.Claims.(*SignedDetails)
+	if !ok {
+		msg = "the token is invalid"
+		msg = err.Error()
+		return
+	}
+
+	if claims.ExpiresAt < time.Now().Local().Unix() {
+		msg = "token is expired"
+		msg = err.Error()
+		return
+	}
+	return claims, msg
 }

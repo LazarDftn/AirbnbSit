@@ -3,6 +3,7 @@ import { formatDate } from "@angular/common";
 export class Reservation{
     reservationId: string;
     accommodationId: string;
+    location: string;
     guestEmail: string;
     hostEmail: string;
     price: number;
@@ -12,6 +13,7 @@ export class Reservation{
     constructor() {
         this.reservationId = ""
         this.accommodationId = ""
+        this.location = ""
         this.guestEmail = ""
         this.hostEmail = ""
         this.price = 0

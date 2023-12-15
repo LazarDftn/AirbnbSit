@@ -8,3 +8,16 @@
 .form-btn{
     margin-top: 10px;
 }
+
+.accomm-card {
+    width: 25%;
+    display: inline-block;
+    margin: auto;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.accomms-frame {
+    padding: 20px;
+}

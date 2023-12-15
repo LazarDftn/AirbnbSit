@@ -1,6 +1,6 @@
 import {formatDate} from '@angular/common'
 export class Accommodation{
-    Id: string;
+    id: string;
     Owner: string; //change to type of User model later
     name: string;
     location: string;
@@ -10,7 +10,7 @@ export class Accommodation{
     price: number;
     payPer: string;
     constructor() {
-        this.Id = ""
+        this.id = ""
         this.Owner = ""
         this.name = ""
         this.location = ""

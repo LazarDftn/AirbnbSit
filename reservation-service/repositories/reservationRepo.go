@@ -175,7 +175,7 @@ func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability)
 	scanner := rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
 	 AND start_date <= ? AND end_date >= ?
 	ALLOW FILTERING`,
-		availability.Location, availability.AccommID, availability.StartDate, availability.EndDate).Iter().Scanner()
+		availability.Location, availability.AccommID, availability.EndDate, availability.StartDate).Iter().Scanner()
 
 	for scanner.Next() {
 		return "Can't change availability because there are reservations during this period"
@@ -183,7 +183,7 @@ func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability)
 
 	err := rr.session.Query(
 		`DELETE FROM availability_by_accomm WHERE location = ? AND accomm_id = ? AND start_date = ? AND end_date = ?`,
-		availability.Location, availability.StartDate, availability.EndDate, availability.AccommID).Exec()
+		availability.Location, availability.AccommID, availability.StartDate, availability.EndDate).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 		return "Database error"
@@ -191,7 +191,7 @@ func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability)
 	return ""
 }
 
-func (rr *ReservationRepo) GetAvailability(location string, id string) (*domain.Availability, error) {
+func (rr *ReservationRepo) GetAvailability(location string, id string) ([]*domain.Availability, error) {
 
 	scanner := rr.session.Query(`SELECT availability_id, accomm_id, start_date, end_date,
 	name, location, min_capacity, max_capacity
@@ -201,7 +201,7 @@ func (rr *ReservationRepo) GetAvailability(location string, id string) (*domain.
 	var availabilities []*domain.Availability
 	for scanner.Next() {
 		var av domain.Availability
-		err := scanner.Scan(&av.AvailabilityID, &av.AccommID, av.StartDate, &av.EndDate,
+		err := scanner.Scan(&av.AvailabilityID, &av.AccommID, &av.StartDate, &av.EndDate,
 			&av.Name, &av.Location, &av.MinCapacity, &av.MaxCapacity)
 		if err != nil {
 			rr.logger.Println(err)
@@ -213,17 +213,23 @@ func (rr *ReservationRepo) GetAvailability(location string, id string) (*domain.
 		rr.logger.Println(err)
 		return nil, err
 	}
-	return availabilities[0], nil
+	return availabilities, nil
 }
 
 func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation) (string, error) {
 
+	var foundAvailability = false
+
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND 
 	accomm_id = ? AND start_date <= ? AND end_date >= ?
 	ALLOW FILTERING`,
-		variation.Location, variation.AccommID, variation.EndDate, variation.StartDate).Iter().Scanner()
+		variation.Location, variation.AccommID, variation.StartDate, variation.EndDate).Iter().Scanner()
 
 	for scanner.Next() {
+		foundAvailability = true
+	}
+
+	if !foundAvailability {
 		return "Can't change price because the accommodation is unavailable during this period", nil
 	}
 
@@ -259,14 +265,14 @@ func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation
 }
 
 func (rr *ReservationRepo) GetVariationsByAccommId(location string, id string) ([]domain.PriceVariation, error) {
-	scanner := rr.session.Query(`SELECT variation_id, accomm_id, percentage, start_date, end_date FROM variation_by_accomm_and_interval 
+	scanner := rr.session.Query(`SELECT variation_id, location, accomm_id, percentage, start_date, end_date FROM variation_by_accomm_and_interval 
 	WHERE location = ? AND accomm_id = ?`,
 		location, id).Iter().Scanner()
 
 	var foundVariations []domain.PriceVariation
 	for scanner.Next() {
 		var pv domain.PriceVariation
-		err := scanner.Scan(&pv.VariationID, &pv.AccommID, &pv.Percentage, &pv.StartDate, &pv.EndDate)
+		err := scanner.Scan(&pv.VariationID, &pv.Location, &pv.AccommID, &pv.Percentage, &pv.StartDate, &pv.EndDate)
 		if err != nil {
 			rr.logger.Println(err)
 			return nil, err
@@ -278,6 +284,27 @@ func (rr *ReservationRepo) GetVariationsByAccommId(location string, id string) (
 		return nil, err
 	}
 	return foundVariations, nil
+}
+
+func (rr *ReservationRepo) DeletePriceVariation(pv *domain.PriceVariation) string {
+
+	scanner := rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
+	 AND start_date <= ? AND end_date >= ?
+	ALLOW FILTERING`,
+		pv.Location, pv.AccommID, pv.EndDate, pv.StartDate).Iter().Scanner()
+
+	for scanner.Next() {
+		return "Can't change price because there are reservations during this period"
+	}
+
+	err := rr.session.Query(
+		`DELETE FROM variation_by_accomm_and_interval WHERE location = ? AND accomm_id = ? AND start_date = ? AND end_date = ?`,
+		pv.Location, pv.AccommID, pv.StartDate, pv.EndDate).Exec()
+	if err != nil {
+		rr.logger.Println(err)
+		return "Database error"
+	}
+	return ""
 }
 
 func (rr *ReservationRepo) InsertAccommodationPrice(price *domain.AccommPrice) error {
@@ -323,7 +350,7 @@ func (rr *ReservationRepo) GetPriceByAccomm(id string) (*domain.AccommPrice, err
 // create the reservationID in the handler before calling this method
 func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) string {
 
-	isAvailable := false
+	var isAvailable = false
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND 
 	accomm_id = ? AND start_date <= ? AND end_date >= ?
@@ -347,36 +374,13 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 		return "That period is occupied"
 	}
 
-	scanner2 := rr.session.Query(`SELECT * FROM price_by_accommodation WHERE accomm_id = ?`,
-		reservation.AccommID).Iter().Scanner()
-
-	var prices []domain.AccommPrice
-	for scanner2.Next() {
-		var price domain.AccommPrice
-		err := scanner2.Scan(&price.AccommID, &price.PayPer, &price.Price)
-		if err != nil {
-			rr.logger.Println(err)
-			return "error"
-		}
-		prices = append(prices, price)
-	}
-
-	var priceNum int
-
-	if prices[0].PayPer == "per guest" {
-		// check if accommodation payment is per person, then multiply the price with the number of people in the reservation
-		priceNum = prices[0].Price * reservation.NumOfPeople
-	} else {
-		priceNum = prices[0].Price
-	}
-
 	reservation.ReservationID, _ = gocql.RandomUUID()
 	err := rr.session.Query(
 		`INSERT INTO reservation_by_accommodation (location, accomm_id, reservation_id, start_date, end_date, num_of_people,
 			guest_email, host_email, price) 
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		reservation.Location, reservation.AccommID, reservation.ReservationID, reservation.StartDate, reservation.EndDate,
-		reservation.NumOfPeople, reservation.GuestEmail, reservation.HostEmail, priceNum).Exec()
+		reservation.NumOfPeople, reservation.GuestEmail, reservation.HostEmail, reservation.Price).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 		return "error"

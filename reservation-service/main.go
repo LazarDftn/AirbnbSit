@@ -35,19 +35,24 @@ func main() {
 	router := gin.Default()
 	//router.Use(accommodationHandler.MiddlewareContentTypeSet(), accommodationHandler.CORSMiddleware())
 	router.Use(reservationHandler.CORSMiddleware())
-	router.POST("/", reservationHandler.PostReservation)
-	router.GET("/accommodation/:location/:accomm_id", reservationHandler.GetResByAccommodation)
 
-	router.POST("/accommodation-price/", reservationHandler.PostPrice)
-	router.GET("/accommodation-price/:accomm_id", reservationHandler.GetPriceByAccommodation)
+	rg1 := router.Group("/", reservationHandler.CORSMiddleware())
+	rg2 := router.Group("/host", reservationHandler.CORSMiddleware(), reservationHandler.Authorize("HOST"))
+	rg3 := router.Group("/guest", reservationHandler.CORSMiddleware(), reservationHandler.Authorize("GUEST"))
 
-	router.POST("/accommodation/price-variation/", reservationHandler.CreatePriceVariation)
-	router.GET("/accommodation/price-variation/:location/:accomm_id", reservationHandler.GetPriceVariationByAccommId)
-	router.POST("/check-price/", reservationHandler.CheckPrice)
+	rg1.GET("/accommodation/:location/:accomm_id", reservationHandler.GetResByAccommodation)
+	rg1.GET("/accommodation-price/:accomm_id", reservationHandler.GetPriceByAccommodation)
+	rg1.GET("/accommodation/price-variation/:location/:accomm_id", reservationHandler.GetPriceVariationByAccommId)
+	rg1.POST("/check-price/", reservationHandler.CheckPrice)
+	rg1.GET("/availability/:location/:accomm_id", reservationHandler.GetAvailability)
 
-	router.POST("/availability/create", reservationHandler.CreateAvailability)
-	router.POST("/availability/delete", reservationHandler.DeleteAvailability)
-	router.GET("/availability/:location/:accomm_id", reservationHandler.GetAvailability)
+	rg2.POST("/accommodation-price/", reservationHandler.PostPrice)
+	rg2.POST("/accommodation/price-variation/", reservationHandler.CreatePriceVariation)
+	rg2.POST("/accommodation/price-variation/delete", reservationHandler.DeletePriceVariation)
+	rg2.POST("/availability/create", reservationHandler.CreateAvailability)
+	rg2.POST("/availability/delete", reservationHandler.DeleteAvailability)
+
+	rg3.POST("/", reservationHandler.PostReservation)
 
 	// adding the authorization middleware for Guest and Host, depending on the User action route
 	// router.Use(accommodationHandler.Authorize("HOST")).POST("/create", accommodationHandler.PostAccommodation)

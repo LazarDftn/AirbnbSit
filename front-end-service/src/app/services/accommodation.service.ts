@@ -48,4 +48,12 @@ export class AccommodationService {
           return data
         }));
       }
+
+      getAll(){
+
+        return this.apiService.get(this.config.accommodation_url)
+        .pipe(map((data) => {
+          return data
+        }));
+      }
     }

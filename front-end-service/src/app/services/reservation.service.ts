@@ -6,8 +6,8 @@ import { ApiService } from './api.service';
 import { ConfigService } from './config.service';
 import { AuthService } from './auth.service';
 import { formatDate } from '@angular/common';
-import { Availability } from '../model/availability';
 import { PriceVariation } from '../model/priceVariation';
+import { Availability } from '../model/availability';
 import { Reservation } from '../model/reservation';
 
 @Injectable({

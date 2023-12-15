@@ -21,12 +21,29 @@
                             Please enter a Name!
                           </div>
                     </div>
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <label for="location">Location:</label>
                         <input type="location" class="form-control" [(ngModel)]="accommodation.location"
                         formControlName="location" placeholder="Enter location" required>
                         <div *ngIf="accommForm.controls['location'].errors?.['required'] && submitted" style="color:red;">
                             Please enter a Location!
+                          </div>
+                    </div> -->
+                    <div class="form-group">
+                        <span class="form-label">Location:</span>
+                        <select class="form-control" [(ngModel)]="accommodation.location" formControlName="location">
+                            <option value="Belgrade" selected>Belgrade</option>
+                            <option value="Novi Sad">Novi Sad</option>
+                            <option value="Nis">Nis</option>
+                            <option value="London">London</option>
+                            <option value="Frankfurt">Frankfurt</option>
+                            <option value="Istanbul">Istanbul</option>
+                            <option value="Rome">Rome</option>
+                            <option value="Paris">Paris</option>
+                        </select>
+                        <span class="select-arrow"></span>
+                        <div *ngIf="accommForm.controls['location'].errors?.['required'] && submitted" style="color:red;">
+                            Please select a Location!
                           </div>
                     </div>
                     <div class="form-group">

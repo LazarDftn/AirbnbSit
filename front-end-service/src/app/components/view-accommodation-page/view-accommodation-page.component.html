@@ -12,6 +12,10 @@
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <h2 class="text-center">{{accomm.name}}</h2>
+                <button *ngIf="this.authService.userHasEmail(this.accomm.Owner)"
+                class="btn btn-primary w-30" (click)="edit(this.accomm.id)">
+                    Edit
+                </button>
                     <div class="form-group">
                         <p>The location is {{accomm.location}}
                     </div>

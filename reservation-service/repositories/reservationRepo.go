@@ -223,7 +223,7 @@ func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND 
 	accomm_id = ? AND start_date <= ? AND end_date >= ?
 	ALLOW FILTERING`,
-		variation.Location, variation.AccommID, variation.EndDate, variation.StartDate).Iter().Scanner()
+		variation.Location, variation.AccommID, variation.StartDate, variation.EndDate).Iter().Scanner()
 
 	for scanner.Next() {
 		foundAvailability = true

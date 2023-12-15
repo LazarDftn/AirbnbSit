@@ -64,7 +64,7 @@ export class ReservationService {
           'token': localStorage.getItem("airbnbToken") + ''
         });
 
-        return this.apiService.post(this.config.accommodation_price_url, priceDTO, postHeaders)
+        return this.apiService.post(this.config.create_accommodation_price, priceDTO, postHeaders)
         .pipe(map((data) => {
           return data
         }));
@@ -80,9 +80,9 @@ export class ReservationService {
           price: price,
           numOfPeople: numOfPeople,
           startDate: new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(),
-          startDate.getHours() - 2, startDate.getMinutes(), startDate.getMinutes())),
+          startDate.getHours() - 1, startDate.getMinutes(), startDate.getMinutes())),
           endDate: new Date(Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(),
-          endDate.getHours() - 2, endDate.getMinutes(), endDate.getMinutes()))
+          endDate.getHours() - 1, endDate.getMinutes(), endDate.getMinutes()))
         }
 
         const postHeaders = new HttpHeaders({
@@ -137,9 +137,9 @@ export class ReservationService {
           price: res.price,
           numOfPeople: res.numOfPeople,
           startDate: new Date(Date.UTC(res.startDate.getFullYear(), res.startDate.getMonth(), res.startDate.getDate(),
-          res.startDate.getHours() - 2, res.startDate.getMinutes(), res.startDate.getMinutes())),
+          res.startDate.getHours() - 1, res.startDate.getMinutes(), res.startDate.getMinutes())),
           endDate: new Date(Date.UTC(res.endDate.getFullYear(), res.endDate.getMonth(), res.endDate.getDate(),
-          res.endDate.getHours() - 2, res.endDate.getMinutes(), res.endDate.getMinutes()))
+          res.endDate.getHours() - 1, res.endDate.getMinutes(), res.endDate.getMinutes()))
         }
         
         const postHeaders = new HttpHeaders({
@@ -153,5 +153,55 @@ export class ReservationService {
           return data
         }));
 
+      }
+
+      createAvailability(av: Availability){
+
+        var avDTO = {
+          accommId: av.accommId,
+          location: av.location,
+          name: av.name,
+          minCapacity: av.minCapacity,
+          maxCapacity: av.maxCapacity,
+          startDate: new Date(Date.UTC(av.startDate.getFullYear(), av.startDate.getMonth(), av.startDate.getDate(),
+          av.startDate.getHours() - 1, av.startDate.getMinutes(), av.startDate.getMinutes())),
+          endDate: new Date(Date.UTC(av.endDate.getFullYear(), av.endDate.getMonth(), av.endDate.getDate(),
+          av.endDate.getHours() - 1, av.endDate.getMinutes(), av.endDate.getMinutes()))
+        }
+
+        const postHeaders = new HttpHeaders({
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'token': localStorage.getItem("airbnbToken") + ''
+        });
+
+        return this.apiService.post(this.config.create_availability_url, avDTO, postHeaders)
+        .pipe(map((data) => {
+          return data
+        }));
+      }
+
+      createPriceVariation(pv: PriceVariation){
+
+        var pvDTO = {
+          accommId: pv.accommId,
+          location: pv.location,
+          percentage: pv.percentage,
+          startDate: new Date(Date.UTC(pv.startDate.getFullYear(), pv.startDate.getMonth(), pv.startDate.getDate(),
+          pv.startDate.getHours() - 1, pv.startDate.getMinutes(), pv.startDate.getMinutes())),
+          endDate: new Date(Date.UTC(pv.endDate.getFullYear(), pv.endDate.getMonth(), pv.endDate.getDate(),
+          pv.endDate.getHours() - 1, pv.endDate.getMinutes(), pv.endDate.getMinutes()))
+        }
+
+        const postHeaders = new HttpHeaders({
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'token': localStorage.getItem("airbnbToken") + ''
+        });
+
+        return this.apiService.post(this.config.create_price_variation_url, pvDTO, postHeaders)
+        .pipe(map((data) => {
+          return data
+        }));
       }
     }

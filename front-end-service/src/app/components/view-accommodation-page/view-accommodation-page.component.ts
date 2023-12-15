@@ -81,8 +81,16 @@ export class ViewAccommodationPageComponent implements OnInit {
 
   // before Guest makes the reservation, check service for any price variations for given period and calculate 
   checkPrice(){
+
     this.priceMessage = ""
     this.additionalPriceMessage = ""
+
+    if (!(this.reservation.numOfPeople >= this.accomm.minCapacity) ||
+    !(this.reservation.numOfPeople <= this.accomm.maxCapacity)){
+
+      alert("Number of people is above or below capacity!")
+      return
+    }
 
     this.submitted = true
 
@@ -153,8 +161,16 @@ export class ViewAccommodationPageComponent implements OnInit {
     this.reservation.endDate = new Date(this.reservation.endDate)
 
     this.reservationService.createReservation(this.reservation).subscribe(data => {
-      console.log(data)
+      if (data.body != null){
+        alert("Home is not available during this time")
+      } else {
+        window.location.reload()
+      }
     })
+  }
+
+  edit(id: string){
+    this.router.navigate(['accommodation/edit/' + id])
   }
 
 }

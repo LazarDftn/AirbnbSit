@@ -32,7 +32,7 @@ export class LoginPageComponent implements OnInit {
       this.authService.login(loginData).subscribe(data => {
         var user: User = data.body
         localStorage.setItem("airbnbToken", user.token) //set the token and user data in the localStorage when he logs in
-        localStorage.setItem("airbnbUsername", user.username)
+        localStorage.setItem("airbnbEmail", user.email)
         localStorage.setItem("airbnbRole", data.body.user_type)
         this.router.navigate(['welcome-page'])
       }, err => {

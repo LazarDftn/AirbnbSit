@@ -22,18 +22,12 @@ export class AccommodationService {
       create(accommodation: Accommodation){
         
         var accommDTO = {
-            Owner: localStorage.getItem("airbnbUsername"),
+            Owner: localStorage.getItem("airbnbEmail"),
             Name: accommodation.name,
             Location: accommodation.location,
             Benefits: accommodation.benefits,
             MinCapacity: accommodation.minCapacity,
-            MaxCapacity: accommodation.maxCapacity,
-            Price: accommodation.price,
-            DiscPrice: accommodation.discPrice,
-            DiscPriceStart: accommodation.discDateStart,
-            DiscPriceEnd: accommodation.discDateEnd,
-            DiscWeekend: accommodation.discWeekend,
-            PayPer: accommodation.payPer
+            MaxCapacity: accommodation.maxCapacity
         }
 
         const postHeaders = new HttpHeaders({
@@ -42,7 +36,24 @@ export class AccommodationService {
             'token': localStorage.getItem("airbnbToken") + '' // for now send auth tokens like this, intercept all requests later
           });
           return this.apiService.post(this.config.accommodations_url, JSON.stringify(accommDTO), postHeaders)
-            .pipe(map(() => {
+            .pipe(map((data) => {
+              return data
             }));
+      }
+
+      getAccommById(id: string){
+        
+        return this.apiService.get(this.config.accommodation_url + id)
+        .pipe(map((data) => {
+          return data
+        }));
+      }
+
+      getAll(){
+
+        return this.apiService.get(this.config.accommodation_url)
+        .pipe(map((data) => {
+          return data
+        }));
       }
     }

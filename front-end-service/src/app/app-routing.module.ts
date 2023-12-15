@@ -9,6 +9,8 @@ import { CreateAccommodationPageComponent } from './components/create-accommodat
 import { AccountVerifPageComponent } from './components/account-verif-page/account-verif-page.component';
 import { ForgotPasswordPageComponent } from './components/forgot-password-page/forgot-password-page.component';
 import { SearchAccommodationPageComponent } from './components/search-accommodation-page/search-accommodation-page.component';
+import { ViewAccommodationPageComponent } from './components/view-accommodation-page/view-accommodation-page.component';
+import { EditAccommodationPageComponent } from './components/edit-accommodation-page/edit-accommodation-page.component';
 
 const routes: Routes = [
   {path: '', pathMatch:'full', component: WelcomePageComponent},
@@ -17,7 +19,9 @@ const routes: Routes = [
   {path: 'create-accommodation', component: CreateAccommodationPageComponent},
   {path: 'account/:id/:id2', component: AccountVerifPageComponent},
   {path: 'forgot-password-page', component: ForgotPasswordPageComponent},
-  {path: 'welcome-page', component: WelcomePageComponent}]
+  {path: 'welcome-page', component: WelcomePageComponent},
+  {path: 'accommodation/:id', component: ViewAccommodationPageComponent},
+  {path: 'accommodation/edit/:id', component: EditAccommodationPageComponent}]
 ;
 
 @NgModule({

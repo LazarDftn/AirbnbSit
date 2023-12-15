@@ -11,9 +11,9 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      ORDERING_DB_HOST: ${AUTH_DB_HOST}
-      ORDERING_DB_PORT: ${AUTH_DB_PORT}
-      ORDERING_SERVICE_PORT: ${AUTH_SERVICE_PORT}
+      AUTH_DB_HOST: ${AUTH_DB_HOST}
+      AUTH_DB_PORT: ${AUTH_DB_PORT}
+      AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT}
     depends_on:
       - auth_db
     networks:
@@ -28,13 +28,34 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      ORDERING_DB_HOST: ${ACCOMMODATIONS_DB_HOST}
-      ORDERING_DB_PORT: ${ACCOMMODATIONS_DB_PORT}
-      ORDERING_SERVICE_PORT: ${ACCOMMODATIONS_SERVICE_PORT}
+      ACCOMMODATIONS_DB_HOST: ${ACCOMMODATIONS_DB_HOST}
+      ACCOMMODATIONS_DB_PORT: ${ACCOMMODATIONS_DB_PORT}
+      ACCOMMODATIONS_SERVICE_PORT: ${ACCOMMODATIONS_SERVICE_PORT}
     depends_on:
       - accommodations_db
     networks:
       - network
+
+  reservation_service:
+    image: reservation_service
+    container_name: reservation_service
+    hostname: "reservation_service"
+    build:
+      context: ./reservation-service/
+      dockerfile: Dockerfile
+    restart: always
+    #Will be accessible through os.Getenv("PORT")
+    environment:
+      - PORT=8000
+      # NoSQL: environment variable holding connection URI for Cassandra database
+      - CASS_DB=reservation_db:9042
+    # NoSQL: Extremely important! Cassandra takes a lot of time to start!
+    # If we don't wait for it to fully initialize we will get exceptions and will not be able to connect!
+    depends_on:
+      reservation_db:
+        condition: service_healthy
+    networks:
+      - network  
 
   api_gateway:
     build:
@@ -48,6 +69,7 @@ services:
     depends_on:
       - auth_service
       - accommodations_service
+      - reservation_service
     networks:
       - network
 
@@ -62,6 +84,20 @@ services:
     image: mongo
     container_name: accommodations_db
     restart: on-failure
+    networks:
+      - network
+
+  reservation_db:
+    image: cassandra
+    restart: always
+    ports:
+      - "9042:9042"
+    # Docker healtcheck - checks if database is "alive"
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 15s
+      timeout: 15s
+      retries: 15
     networks:
       - network
 

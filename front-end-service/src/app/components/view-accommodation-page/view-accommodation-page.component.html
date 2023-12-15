@@ -1,0 +1,123 @@
+<nav-bar></nav-bar>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Accommodation</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <section id="create-accomm" class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h2 class="text-center">{{accomm.name}}</h2>
+                <button *ngIf="this.authService.userHasEmail(this.accomm.Owner)"
+                class="btn btn-primary w-30" (click)="edit(this.accomm.id)">
+                    Edit
+                </button>
+                    <div class="form-group">
+                        <p>The location is {{accomm.location}}
+                    </div>
+                    <div class="form-group">
+                        <p>{{accomm.benefits}}</p>
+                    </div>
+                    <div class="form-group">
+                        <p>Guest capacity is {{accomm.minCapacity}} - {{accomm.maxCapacity}} people</p>
+                    </div>
+                    <div *ngIf="price > 0">
+                        <div class="form-group">
+                            <label for="minCapacity">Price:</label>
+                            <p *ngIf="loadedPrice">{{accomm.price}} dollars per day {{accomm.payPer}}</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <p>Hosts contact: {{accomm.Owner}}
+                        </p>
+                    </div>
+                    <div *ngIf="price == 0 && this.authService.userHasEmail(this.accomm.Owner)">
+                    <div class="form-group">
+                        <label for="price">Price:</label>
+                        <input type="number" class="form-control" [(ngModel)]="accomm.price"
+                        name="price" placeholder="Enter price" required>
+                        <div *ngIf="(accomm.price < 0) && submitted" style="color: red;">
+                          Price can't be negative!
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="payPer">Select payment method:</label>
+                        <select [(ngModel)]="accomm.payPer" class="form-control" name="payPer">
+                          <option value="" selected>Not per guest</option>
+                          <option value="per guest">Per guest</option>
+                        </select>
+                      </div>
+                      <button (click)="addPrice()" class="btn btn-primary w-100">Add price</button>
+                    </div>
+                    <hr>
+                    <div *ngIf="this.authService.userHasRole('GUEST') && price > 0">
+                    <div class="form-group">
+                        <label for="date">Start date:</label>
+                        <input [disabled]="submitted" type="date" class="form-control col-md-6" [(ngModel)]="reservation.startDate"/>
+                        </div>
+                    <div class="form-group">
+                        <label for="date">End date:</label>
+                        <input [disabled]="submitted" type="date" class="form-control col-md-6" [(ngModel)]="reservation.endDate"/>
+                    </div>    
+                    <div class="form-group">
+                        <label for="numOfGuests">Number of guests:</label>
+                        <input [disabled]="submitted" type="number" class="form-control col-md-6" [(ngModel)]="reservation.numOfPeople"/>
+                    </div> 
+                    <button class="btn btn-primary w-100" (click)="checkPrice()">
+                        Check the price for your stay
+                    </button>
+                    <br>
+                    <br>
+                    <h4>{{priceMessage}}</h4>
+                    <h4>{{additionalPriceMessage}}</h4>
+                    <br>
+                    <button *ngIf="submitted" class="btn btn-primary w-30" (click)="makeReservation()">
+                        Book
+                    </button>
+                </div>
+                    <!-- <div *ngIf="accomm.price > 0 && this.authService.userHasEmail(accomm.Owner)">
+                            Implement daterange inputs for accommodation unavailability and price changes here
+                            (or in another component, I don't know)
+                    </div> -->
+                </div>
+                <div class="col-md-6">
+                <h3>Availability for this home</h3>
+                <div class="dates-box">
+                <div *ngFor="let av of availabilities">
+                    <br>
+                    <p>from {{ av.startDate.toString().slice(0,10) }} to {{ av.endDate.toString().slice(0,10) }} </p>
+                    <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
+                        <button (click)="deleteAvailability(av)">delete</button>
+                    </div>
+                </div>
+                </div>
+                <h3>Reservations for this home</h3>
+                <div class="dates-box">
+                <div *ngFor="let res of reservations">
+                    <br>
+                    <p>from {{ res.startDate.toString().slice(0,10) }} to {{ res.endDate.toString().slice(0,10) }} </p>
+                    <p *ngIf="this.authService.userHasEmail(accomm.Owner) || this.authService.userHasEmail(res.guestEmail)">
+                        {{ res.guestEmail }} - {{ res.numOfPeople }} people - ${{ res.price }}
+                    </p>
+                </div>
+            </div>
+            <h3>Price changes for this home</h3>
+            <div class="dates-box">
+            <div *ngFor="let pv of priceVariations">
+                <br>
+                <p>from {{ pv.startDate.toString().slice(0,10) }} to {{ pv.endDate.toString().slice(0,10) }} increase of {{ pv.percentage }}%</p>
+                <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
+                    <button (click)="deletePriceVariation(pv)">delete</button>
+                </div>
+            </div>
+            </div>
+            </div>
+            </div>
+    </section>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>

@@ -1,0 +1,10 @@
+.box1 {
+    width: 49%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.box2 {
+    width: 49%;
+    display: inline-block;
+}

@@ -36,10 +36,9 @@ export class CreateAccommodationPageComponent implements OnInit {
 
   public onSubmit(){
     this.submitted = true
-    if (this.accommForm.valid && this.accommodation.maxCapacity >= this.accommodation.minCapacity &&
-      this.validateScript(this.accommodation.name) && this.validateScript(this.accommodation.location)
-      && this.validateScript(this.accommodation.benefits)) {
-    this.accommodationService.create(this.accommodation).subscribe(data => {window.location.reload()});
+    if (this.accommForm.valid && this.accommodation.maxCapacity >= this.accommodation.minCapacity) {
+    this.accommodationService.create(this.accommodation).subscribe(data => 
+      {this.router.navigate(['accommodation/' + data.body])});
     } else {
       console.error("Form is invalid!");
     }
@@ -51,13 +50,7 @@ export class CreateAccommodationPageComponent implements OnInit {
       location: ["Location field is required!", Validators.required],
       benefits: [],
       minCapacity: ["Minimum capacity can't be below 1!", Validators.min(1)],
-      maxCapacity: [],
-      price: ["Price can't be negative!", Validators.min(0)],
-      discPrice: ["Price can't be negative!", Validators.min(0)],
-      discDateStart: [],
-      discDateEnd: ["Start date can't be after end date!", Validators.min(this.accommodation.discDateEnd.getTime())],
-      discWeekend:[],
-      payPer: []
+      maxCapacity: []
     });
   }
 

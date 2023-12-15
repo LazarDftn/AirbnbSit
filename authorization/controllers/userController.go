@@ -56,7 +56,7 @@ func Signup() gin.HandlerFunc {
 			return
 		}
 
-		user.Is_verified = false
+		//user.Is_verified = false *FOR TESTING PURPOSES, UNCOMMENT LATER
 
 		validationErr := validate.Struct(user)
 		if validationErr != nil {

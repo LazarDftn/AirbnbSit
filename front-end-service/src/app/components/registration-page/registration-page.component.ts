@@ -1,6 +1,7 @@
 import { Attribute, Component } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validator, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { User } from 'src/app/model/user';
 import { AuthService } from 'src/app/services/auth.service';
 
@@ -17,6 +18,7 @@ export class RegistrationPageComponent {
   submitted: boolean = false;
 
   constructor(private authService: AuthService,
+    private toastr: ToastrService,
     private fb: FormBuilder,
     private router: Router){}
 
@@ -39,7 +41,7 @@ export class RegistrationPageComponent {
       && this.validateEmail(this.user.email)) {
     
       this.authService.signup(this.user).subscribe(data => {
-        alert("Success! Please go confirm your Email")
+        this.toastr.success("Please go confirm your Email", "Success!")
         this.router.navigate(['/login-page'])
       }
         , error => {

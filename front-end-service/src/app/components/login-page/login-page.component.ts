@@ -38,7 +38,7 @@ export class LoginPageComponent implements OnInit {
       }, err => {
       })
     } else {
-      this.toastr.warning("Please fill out all fields and check that you're not a robot!");
+      this.toastr.warning("Please fill out all fields and check that you're not a robot!", "Warning");
     }
   }
 

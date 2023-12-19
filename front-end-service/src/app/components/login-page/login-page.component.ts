@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validator, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { User } from 'src/app/model/user';
 import { AuthService } from 'src/app/services/auth.service';
 
@@ -11,9 +12,9 @@ import { AuthService } from 'src/app/services/auth.service';
 })
 export class LoginPageComponent implements OnInit {
   protected loginForm!: FormGroup;
-  error = ""
 
   constructor(private formBuilder: FormBuilder,
+    private toastr: ToastrService,
     private authService: AuthService,
     private router: Router){}
 
@@ -28,7 +29,6 @@ export class LoginPageComponent implements OnInit {
   onSubmit(loginData: any){
 
     if (this.loginForm.valid){
-      this.error = ""
       this.authService.login(loginData).subscribe(data => {
         var user: User = data.body
         localStorage.setItem("airbnbToken", user.token) //set the token and user data in the localStorage when he logs in
@@ -36,10 +36,9 @@ export class LoginPageComponent implements OnInit {
         localStorage.setItem("airbnbRole", data.body.user_type)
         this.router.navigate(['welcome-page'])
       }, err => {
-        this.error = err.error.error
       })
     } else {
-      this.error = "Please fill out all fields and check that you're not a robot!"
+      this.toastr.warning("Please fill out all fields and check that you're not a robot!");
     }
   }
 

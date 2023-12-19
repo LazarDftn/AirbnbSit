@@ -2,6 +2,9 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+import { ToastrModule } from 'ngx-toastr';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginPageComponent } from './components/login-page/login-page.component';
@@ -42,7 +45,13 @@ import { EditAccommodationPageComponent } from './components/edit-accommodation-
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    NgxCaptchaModule
+    NgxCaptchaModule,
+    ToastrModule.forRoot({
+      positionClass:"toast-top-center",
+      preventDuplicates: true,
+      closeButton: true
+    }),
+    BrowserAnimationsModule
   ],
   providers: [ApiService,
     AccommodationService,

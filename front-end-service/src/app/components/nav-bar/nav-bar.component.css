@@ -18,6 +18,15 @@ ul {
     padding: 14px 16px;
     text-decoration: none;
   }
+
+  b {
+    float: right;
+    display: block;
+    color: #666;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+  }
   
   li a:hover:not(.active) {
     background-color: #ddd;

@@ -19,4 +19,6 @@ export class NavBarComponent {
     this.authService.logout()
   }
 
+  email = localStorage.getItem("airbnbEmail")
+
 }

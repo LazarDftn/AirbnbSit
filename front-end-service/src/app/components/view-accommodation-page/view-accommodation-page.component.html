@@ -17,7 +17,6 @@
                 <img id="img" src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png" />
 
                 <div class="accommInfoBox">
-                    <!-- <h4 id="infoTxt">Accommodation Information</h4> -->
                     <i class="fas fa-location-dot" style="font-size: 20px;"></i>Location
                     <p>{{accomm.location}}</p>
                     
@@ -103,7 +102,7 @@
                 <div class="availability-box">
                     <h3>Availability for this home</h3>
                     <div *ngFor="let av of availabilities">
-                        <p>FROM {{ av.startDate.toString().slice(0,10) }} TO {{ av.endDate.toString().slice(0,10) }}</p>
+                        <p><b>FROM</b> {{ av.startDate.toString().slice(0,10) }} <b>TO</b> {{ av.endDate.toString().slice(0,10) }}</p>
                         <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
                             <button (click)="deleteAvailability(av)" class="btn btn-primary w-100">Delete
                                 Availability</button>
@@ -114,10 +113,9 @@
                 
                 <div class="reservations-box">
                     <h3>Reservations Dates for this home</h3>
-                    <div *ngFor="let res of reservations">
-                        <p>FROM {{ res.startDate.toString().slice(0,10) }} TO {{ res.endDate.toString().slice(0,10) }}
-                        </p>
-                        <p><b>Reservation Info</b></p>
+                    <div *ngFor="let res of reservations" class="singleReservationBox">
+                        <p><b>FROM</b> {{ res.startDate.toString().slice(0,10) }} <b>TO</b> {{ res.endDate.toString().slice(0,10) }}</p>
+                        <!-- <p><b>Reservation Info</b></p> -->
                         <p
                             *ngIf="this.authService.userHasEmail(accomm.Owner) || this.authService.userHasEmail(res.guestEmail)">
                             <b>Reservation User:</b> {{ res.guestEmail }}
@@ -134,7 +132,7 @@
                     <h3>Price changes for this home</h3>
                     <div *ngFor="let pv of priceVariations">
                         <br>
-                        <p>FROM {{ pv.startDate.toString().slice(0,10) }} TO {{ pv.endDate.toString().slice(0,10) }}
+                        <p><b>FROM</b> {{ pv.startDate.toString().slice(0,10) }} <b>TO</b> {{ pv.endDate.toString().slice(0,10) }}
                             increase of {{ pv.percentage }}%</p>
                         <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
                             <button (click)="deletePriceVariation(pv)" class="btn btn-primary w-100">Delete Price Changes</button>

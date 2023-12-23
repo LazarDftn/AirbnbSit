@@ -2,7 +2,6 @@
     margin-top: 20px;
     padding: 25px;
     background-color: #f3f3f3;
-    /* border: solid red 2px; */
 }
 
 .form-btn{
@@ -21,4 +20,9 @@
 
 .accomms-frame {
     padding: 20px;
+}
+
+.card h4{
+    margin-top: 10px;
+    margin-bottom: 0;
 }

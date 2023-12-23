@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { Accommodation } from 'src/app/model/accommodation';
 import { Availability } from 'src/app/model/availability';
 import { PriceVariation } from 'src/app/model/priceVariation';
@@ -19,7 +20,8 @@ export class ViewAccommodationPageComponent implements OnInit {
     private accommService: AccommodationService,
     private reservationService: ReservationService,
     private router: Router,
-    private route: ActivatedRoute){}
+    private route: ActivatedRoute,
+    private toastr: ToastrService){}
     
   accommId = ""
   price = 0 //accommodation price per day
@@ -88,7 +90,7 @@ export class ViewAccommodationPageComponent implements OnInit {
     if (!(this.reservation.numOfPeople >= this.accomm.minCapacity) ||
     !(this.reservation.numOfPeople <= this.accomm.maxCapacity)){
 
-      alert("Number of people is above or below capacity!")
+      this.toastr.warning("Number of people is above or below capacity!", "Warning!")
       return
     }
 
@@ -136,7 +138,7 @@ export class ViewAccommodationPageComponent implements OnInit {
     this.reservationService.deleteAvailability(av).subscribe(data => {
         window.location.reload()
     }, err => {
-      alert("Can't delete availability because there are reservations during this period")
+      this.toastr.warning("Can't delete availability because there are reservations during this period", "Warning!")
     })
 
   }
@@ -146,7 +148,7 @@ export class ViewAccommodationPageComponent implements OnInit {
     this.reservationService.deletePriceVariation(pv).subscribe(data => {
         window.location.reload()
     }, err => {
-      alert("Can't delete price variation because there are reservations during this period")
+      this.toastr.warning("Can't delete price variation because there are reservations during this period", "Warning!")
     })
   }
 
@@ -162,7 +164,7 @@ export class ViewAccommodationPageComponent implements OnInit {
 
     this.reservationService.createReservation(this.reservation).subscribe(data => {
       if (data.body != null){
-        alert("Home is not available during this time")
+        this.toastr.warning("Home is not available during this time", "Warning!")
       } else {
         window.location.reload()
       }

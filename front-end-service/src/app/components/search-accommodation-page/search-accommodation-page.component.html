@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search accommodation</title>
 </head>
+
 <body>
     <div id="booking" class="section">
         <div class="section-center">
@@ -74,15 +76,18 @@
                 </div>
             </div>
             <div class="accomms-frame">
-            <div *ngFor="let accomm of accommodations" class="accomm-card">
-                <div class="card" (click)="goTo(accomm)">
-                    <img src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png"/>
-                  <h4>{{accomm.name}}</h4>
-                  <p>{{accomm.location}}</p>
+                <div *ngFor="let accomm of accommodations" class="accomm-card">
+                    <div class="card" (click)="goTo(accomm)">
+                        <img
+                            src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png" />
+                        <h4>{{accomm.name}}</h4>
+                        <p>{{accomm.location}}</p>
+                        <p>{{accomm.Owner}}</p>
+                    </div>
                 </div>
-              </div>
-              </div>
+            </div>
         </div>
     </div>
 </body>
+
 </html>

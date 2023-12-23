@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { Accommodation } from 'src/app/model/accommodation';
 import { AccommodationService } from 'src/app/services/accommodation.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -19,7 +20,8 @@ export class CreateAccommodationPageComponent implements OnInit {
   constructor(private accommodationService: AccommodationService,
     private authService: AuthService,
     private fb: FormBuilder,
-    private router: Router){}
+    private router: Router,
+    private toastr: ToastrService){}
 
   ngOnInit(): void {
 
@@ -40,7 +42,7 @@ export class CreateAccommodationPageComponent implements OnInit {
     this.accommodationService.create(this.accommodation).subscribe(data => 
       {this.router.navigate(['accommodation/' + data.body])});
     } else {
-      console.error("Form is invalid!");
+      this.toastr.warning("Form is invalid!", "Warning");
     }
   }
 

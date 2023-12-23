@@ -12,30 +12,39 @@
 <body>
     <section id="create-accomm" class="container mt-5">
         <div class="row justify-content-center">
-            <div class="col-md-6">
-                <h2 class="text-center">{{accomm.name}}</h2>
-                <button *ngIf="this.authService.userHasEmail(this.accomm.Owner)" class="btn btn-primary w-30"
-                    (click)="edit(this.accomm.id)">
-                    Edit
-                </button>
-                <div class="form-group">
-                    <p><b>Location:</b> {{accomm.location}}
-                </div>
-                <div class="form-group">
-                    <p><b>Benefits:</b> {{accomm.benefits}}</p>
-                </div>
-                <div class="form-group">
-                    <p><b>Guest capacity:</b> {{accomm.minCapacity}} - {{accomm.maxCapacity}} people</p>
-                </div>
-                <div *ngIf="price > 0">
-                    <div class="form-group">
-                        <label for="minCapacity"><b>Price:</b></label>
-                        <p *ngIf="loadedPrice">{{accomm.price}} dollars per day {{accomm.payPer}}</p>
+            <div class="kolona1">
+                <h2 id="acoomNameTxt">{{accomm.name}}</h2>
+                <img id="img" src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png" />
+
+                <div class="accommInfoBox">
+                    <!-- <h4 id="infoTxt">Accommodation Information</h4> -->
+                    <i class="fas fa-location-dot" style="font-size: 20px;"></i>Location
+                    <p>{{accomm.location}}</p>
+                    
+                    <i class="fas fa-thumbs-up" style="font-size: 20px;"></i>Benefits
+                    <p>{{accomm.benefits}}</p>
+                    
+                    <i class="fas fa-bed" style="font-size: 20px;"></i>Guest capacity
+                    <p> {{accomm.minCapacity}} - {{accomm.maxCapacity}} people</p>
+
+                    <div *ngIf="price > 0">
+                        <div class="form-group">
+                            <i class="fas fa-dollar-sign" style="font-size: 20px;"></i>
+                            <label for="minCapacity">Price</label>
+                            <p *ngIf="loadedPrice">{{accomm.price}} dollars per day {{accomm.payPer}}</p>
+                        </div>
                     </div>
+
+                    <i class="fas fa-envelope" style="font-size: 20px;"></i>Host Contact E-mail
+                    <p>{{accomm.Owner}} </p>
+                    <button *ngIf="this.authService.userHasEmail(this.accomm.Owner)" class="btn btn-primary w-100"
+                        (click)="edit(this.accomm.id)">
+                        Edit
+                    </button>
+                    <hr>
                 </div>
-                <div class="form-group">
-                    <p><b>Host E-mail:</b> {{accomm.Owner}} </p>
-                </div>
+
+
                 <div *ngIf="price == 0 && this.authService.userHasEmail(this.accomm.Owner)">
                     <div class="form-group">
                         <label for="price">Price:</label>
@@ -54,8 +63,9 @@
                     </div>
                     <button (click)="addPrice()" class="btn btn-primary w-100">Add price</button>
                 </div>
-                <hr>
-                <div *ngIf="this.authService.userHasRole('GUEST') && price > 0">
+
+                <div *ngIf="this.authService.userHasRole('GUEST') && price > 0" class="startEndDatesBox">
+                    <h4>Select wanted dates</h4>
                     <div class="form-group">
                         <label for="date">Start date:</label>
                         <input [disabled]="submitted" type="date" class="form-control col-md-6"
@@ -79,7 +89,7 @@
                     <h4>{{priceMessage}}</h4>
                     <h4>{{additionalPriceMessage}}</h4>
                     <br>
-                    <button *ngIf="submitted" class="btn btn-primary w-30" (click)="makeReservation()">
+                    <button *ngIf="submitted" class="btn btn-primary w-100" (click)="makeReservation()">
                         Book
                     </button>
                 </div>
@@ -88,42 +98,46 @@
                             (or in another component, I don't know)
                     </div> -->
             </div>
-            <div class="col-md-6">
-                <h3>Availability for this home</h3>
-                <div class="dates-box">
+
+            <div class="kolona2">
+                <div class="availability-box">
+                    <h3>Availability for this home</h3>
                     <div *ngFor="let av of availabilities">
-                        <br>
-                        <p>FROM {{ av.startDate.toString().slice(0,10) }} TO {{ av.endDate.toString().slice(0,10) }}
-                        </p>
+                        <p>FROM {{ av.startDate.toString().slice(0,10) }} TO {{ av.endDate.toString().slice(0,10) }}</p>
                         <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
-                            <button (click)="deleteAvailability(av)">delete</button>
+                            <button (click)="deleteAvailability(av)" class="btn btn-primary w-100">Delete
+                                Availability</button>
                         </div>
                     </div>
+                    <hr>
                 </div>
-                <h3>Reservations for this home</h3>
-                <div class="dates-box">
+                
+                <div class="reservations-box">
+                    <h3>Reservations Dates for this home</h3>
                     <div *ngFor="let res of reservations">
-                        <br>
                         <p>FROM {{ res.startDate.toString().slice(0,10) }} TO {{ res.endDate.toString().slice(0,10) }}
                         </p>
+                        <p><b>Reservation Info</b></p>
                         <p
                             *ngIf="this.authService.userHasEmail(accomm.Owner) || this.authService.userHasEmail(res.guestEmail)">
-                            <b>Reservation User:</b> {{ res.guestEmail }} 
+                            <b>Reservation User:</b> {{ res.guestEmail }}
                             <br>
-                            <b>For:</b> {{ res.numOfPeople }} people 
+                            <b>For:</b> {{ res.numOfPeople }} people
                             <br>
                             <b>Price:</b> ${{ res.price }}
                         </p>
                     </div>
+                    <hr>
                 </div>
-                <h3>Price changes for this home</h3>
-                <div class="dates-box">
+
+                <div class="priceChanges-box">
+                    <h3>Price changes for this home</h3>
                     <div *ngFor="let pv of priceVariations">
                         <br>
-                        <p>from {{ pv.startDate.toString().slice(0,10) }} to {{ pv.endDate.toString().slice(0,10) }}
+                        <p>FROM {{ pv.startDate.toString().slice(0,10) }} TO {{ pv.endDate.toString().slice(0,10) }}
                             increase of {{ pv.percentage }}%</p>
                         <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
-                            <button (click)="deletePriceVariation(pv)">delete</button>
+                            <button (click)="deletePriceVariation(pv)" class="btn btn-primary w-100">Delete Price Changes</button>
                         </div>
                     </div>
                 </div>
@@ -132,4 +146,5 @@
     </section>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </body>

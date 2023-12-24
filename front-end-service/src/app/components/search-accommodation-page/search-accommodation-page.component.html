@@ -24,52 +24,50 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <span class="form-label">Check In Date</span>
-                                        <input class="form-control" type="date" required>
+                                        <input class="form-control" type="date"
+                                        [(ngModel)]="availability.startDate"
+                                        [ngModelOptions]="{standalone: true}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <span class="form-label">Check Out Date</span>
-                                        <input class="form-control" type="date" required>
+                                        <input class="form-control" type="date"
+                                        [(ngModel)]="availability.endDate"
+                                        [ngModelOptions]="{standalone: true}" required>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <span class="form-label">Adults</span>
-                                        <select class="form-control">
-                                            <option>1</option>
-                                            <option>2</option>
-                                            <option>3</option>
-                                            <option>4+</option>
-                                        </select>
-                                        <span class="select-arrow"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <span class="form-label">Children</span>
-                                        <select class="form-control">
-                                            <option>0</option>
-                                            <option>1</option>
-                                            <option>2</option>
-                                        </select>
+                                        <span class="form-label">How many guests</span>
+                                        <input type="number" class="form-control" [(ngModel)]="availability.minCapacity"
+                                        [ngModelOptions]="{standalone: true}"
+                                        placeholder="Enter number of guests for travel" required>
                                         <span class="select-arrow"></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <span class="form-label">Location</span>
-                                <select class="form-control" required>
+                                <select class="form-control" [(ngModel)]="availability.location"
+                                [ngModelOptions]="{standalone: true}"
+                                 required>
                                     <option value selected hidden>Select accommodation location</option>
-                                    <option>Belgrade</option>
-                                    <option>Novi Sad</option>
+                                    <option value="Belgrade" selected>Belgrade</option>
+                                    <option value="Novi Sad">Novi Sad</option>
+                                    <option value="Nis">Nis</option>
+                                    <option value="London">London</option>
+                                    <option value="Frankfurt">Frankfurt</option>
+                                    <option value="Istanbul">Istanbul</option>
+                                    <option value="Rome">Rome</option>
+                                    <option value="Paris">Paris</option>
                                 </select>
                                 <span class="select-arrow"></span>
                             </div>
                             <div class="form-btn">
-                                <button type="submit" class="btn btn-primary">Check availability</button>
+                                <button type="submit" (click)="search()" class="btn btn-primary">Check availability</button>
                             </div>
                         </form>
                     </div>
@@ -83,6 +81,16 @@
                         <h4>{{accomm.name}}</h4>
                         <p>{{accomm.location}}</p>
                         <p>{{accomm.Owner}}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="accomms-frame">
+                <div *ngFor="let av of availabilities" class="accomm-card">
+                    <div class="card" (click)="goToAvailable(av)">
+                        <img
+                            src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png" />
+                        <h4>{{av.name}}</h4>
+                        <p>{{av.location}}</p>
                     </div>
                 </div>
             </div>

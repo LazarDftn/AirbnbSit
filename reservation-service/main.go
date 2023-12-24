@@ -45,6 +45,7 @@ func main() {
 	rg1.GET("/accommodation/price-variation/:location/:accomm_id", reservationHandler.GetPriceVariationByAccommId)
 	rg1.POST("/check-price/", reservationHandler.CheckPrice)
 	rg1.GET("/availability/:location/:accomm_id", reservationHandler.GetAvailability)
+	rg1.POST("/search/", reservationHandler.SearchAccommodations)
 
 	rg2.POST("/accommodation-price/", reservationHandler.PostPrice)
 	rg2.POST("/accommodation/price-variation/", reservationHandler.CreatePriceVariation)

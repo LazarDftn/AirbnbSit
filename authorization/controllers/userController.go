@@ -56,8 +56,6 @@ func Signup() gin.HandlerFunc {
 			return
 		}
 
-		//user.Is_verified = false *FOR TESTING PURPOSES, UNCOMMENT LATER
-
 		validationErr := validate.Struct(user)
 		if validationErr != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
@@ -129,13 +127,16 @@ func Signup() gin.HandlerFunc {
 		user.Token = &token
 		user.Refresh_token = &refreshToken
 
-		var code = utils.GenerateRandomString(8)
-		var userVerif models.UserVerifModel
-		userVerif.VerifUsername = user.Username
-		userVerif.Code = &code
+		/*
+			user.Is_verified = false
+			var code = utils.GenerateRandomString(8)
+			var userVerif models.UserVerifModel
+			userVerif.VerifUsername = user.Username
+			userVerif.Code = &code
 
-		emailVerifCollection.InsertOne(ctx, userVerif)
-		helper.SendVerifEmail(user, code)
+			emailVerifCollection.InsertOne(ctx, userVerif)
+			helper.SendVerifEmail(user, code)
+		*/
 
 		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
 		if insertErr != nil {

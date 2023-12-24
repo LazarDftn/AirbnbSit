@@ -45,9 +45,9 @@ func (r *ReservationsHandler) PostReservation(c *gin.Context) {
 	}
 	err := r.repo.InsertReservation(res)
 	if err != "" {
-		r.logger.Print("Database exception: ", res.StartDate)
+		r.logger.Print("Database exception: ", err)
 		e := json.NewEncoder(c.Writer)
-		e.Encode(res)
+		e.Encode(err)
 	}
 	c.Writer.WriteHeader(http.StatusCreated)
 }
@@ -178,6 +178,28 @@ func (rr *ReservationsHandler) GetPriceVariationByAccommId(c *gin.Context) {
 	e.Encode(variations)
 }
 
+func (rr *ReservationsHandler) SearchAccommodations(c *gin.Context) {
+
+	var av domain.Availability
+
+	if err := c.ShouldBindJSON(&av); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	/*availabilites, err := rr.repo.SearchAccommodations(av)
+	if err != nil {
+		rr.logger.Print("Database exception: ", err)
+	}
+
+	if availabilites == nil {
+		return
+	}
+
+	e := json.NewEncoder(c.Writer)
+	e.Encode(availabilites)*/
+}
+
 func CompareAndCalculate(vr []domain.PriceVariation, res domain.Reservation) (float64, []int) {
 
 	var finalPrice = 0.0
@@ -273,6 +295,8 @@ func (r *ReservationsHandler) GetAvailability(c *gin.Context) {
 	availability, err := r.repo.GetAvailability(location, accommId)
 	if err != nil {
 		r.logger.Print("Database exception: ", err)
+		e := json.NewEncoder(c.Writer)
+		e.Encode(err.Error())
 	}
 
 	if availability == nil {

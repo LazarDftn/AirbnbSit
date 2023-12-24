@@ -204,4 +204,33 @@ export class ReservationService {
           return data
         }));
       }
+
+      searchAccommodations(av: Availability){
+
+        var avDTO = {
+          availabilityId: av.availabilityId,
+          accommId: av.accommId,
+          name: av.name,
+          location: av.location,
+          minCapacity: av.minCapacity,
+          maxCapacity: av.maxCapacity,
+          startDate: new Date(Date.UTC(av.startDate.getFullYear(), av.startDate.getMonth(), av.startDate.getDate(),
+          av.startDate.getHours() - 1, av.startDate.getMinutes(), av.startDate.getMinutes())),
+          endDate: new Date(Date.UTC(av.endDate.getFullYear(), av.endDate.getMonth(), av.endDate.getDate(),
+          av.endDate.getHours() - 1, av.endDate.getMinutes(), av.endDate.getMinutes()))
+        }
+
+        console.log(avDTO)
+
+        const postHeaders = new HttpHeaders({
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'token': localStorage.getItem("airbnbToken") + ''
+        });
+
+        return this.apiService.post(this.config.search_accomm_url, avDTO, postHeaders)
+        .pipe(map((data) => {
+          return data
+        }));
+      }
     }

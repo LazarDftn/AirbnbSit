@@ -93,6 +93,10 @@ export class EditAccommodationPageComponent implements OnInit{
     })
   }
 
+  cancelBtn(){
+    this.router.navigate(['accommodation/' + this.accomm.id])
+  }
+
   private buildForm() {
     this.accommForm = this.fb.group({
       avStartDate: [""],

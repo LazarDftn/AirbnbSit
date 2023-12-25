@@ -67,17 +67,17 @@
                     <h4>Select wanted dates</h4>
                     <div class="form-group">
                         <label for="date">Start date:</label>
-                        <input [disabled]="submitted" type="date" class="form-control col-md-6"
+                        <input [disabled]="submitted" type="date" class="form-control "
                             [(ngModel)]="reservation.startDate" />
                     </div>
                     <div class="form-group">
                         <label for="date">End date:</label>
-                        <input [disabled]="submitted" type="date" class="form-control col-md-6"
+                        <input [disabled]="submitted" type="date" class="form-control "
                             [(ngModel)]="reservation.endDate" />
                     </div>
                     <div class="form-group">
                         <label for="numOfGuests">Number of guests:</label>
-                        <input [disabled]="submitted" type="number" class="form-control col-md-6"
+                        <input [disabled]="submitted" type="number" class="form-control "
                             [(ngModel)]="reservation.numOfPeople" />
                     </div>
                     <button class="btn btn-primary w-100" (click)="checkPrice()">

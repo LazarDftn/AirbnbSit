@@ -21,6 +21,8 @@ export class SearchAccommodationPageComponent implements OnInit {
   accommodations: Accommodation[] = []
   availabilities: Availability[] = []
   availability: Availability = new Availability()
+  startDate: Date = new Date()
+  endDate: Date = new Date()
 
   ngOnInit(): void {
 
@@ -40,11 +42,11 @@ export class SearchAccommodationPageComponent implements OnInit {
   }
 
   search(){
-    var av = this.availability
+    this.availabilities = []
     this.accommodations = []
     this.availability.availabilityId = "00000000-0000-0000-0000-000000000000"
-    this.availability.startDate = new Date(av.startDate)
-    this.availability.endDate = new Date(av.endDate)
+    this.availability.startDate = new Date(this.startDate)
+    this.availability.endDate = new Date(this.endDate)
 
     this.reservationService.searchAccommodations(this.availability)
     .subscribe(data => {

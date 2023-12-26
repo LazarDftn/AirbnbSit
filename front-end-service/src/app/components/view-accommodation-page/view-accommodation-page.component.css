@@ -1,4 +1,68 @@
-.dates-box {
-    height: 200px;
-    overflow-y: auto;
+.container {
+    background-color: #f3f3f3;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+    padding: 20px;
+}
+
+#acoomNameTxt {
+    text-align: center;
+    font-size: 40px;
+}
+
+.accommInfoBox {
+    font-size: 22px;
+    padding: 20px;
+
+}
+
+/* .startEndDatesBox {} */
+
+.accommInfoBox p {
+    font-size: 17px;
+    padding: 5px;
+    border-bottom: 2px solid gray;
+    border-radius: 10px;
+    box-shadow: 0 0 15px 4px rgba(0, 0, 0, 0.06); 
+}
+
+#infoTxt {
+    text-align: center;
+}
+
+#img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+    border-radius: 20px;
+}
+
+.availability-box {
+    padding: 20px;
+}
+
+.availability-box p {
+    font-size: 20px;
+}
+
+.reservations-box {
+    padding: 20px;
+    font-size: 20px;
+}
+
+.singleReservationBox{
+    background-color: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 10px;
+}
+
+.priceChanges-box {
+    padding: 20px;
+}
+
+.startEndDatesBox{
+    padding: 20px;
 }

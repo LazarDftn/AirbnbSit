@@ -166,6 +166,7 @@ export class ViewAccommodationPageComponent implements OnInit {
       if (data.body != null){
         this.toastr.warning("Home is not available during this time", "Warning!")
       } else {
+        this.toastr.success("Successfuly Booked the Accommadation!", "Success!")
         window.location.reload()
       }
     })
@@ -174,5 +175,5 @@ export class ViewAccommodationPageComponent implements OnInit {
   edit(id: string){
     this.router.navigate(['accommodation/edit/' + id])
   }
-
+  
 }

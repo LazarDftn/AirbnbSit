@@ -36,3 +36,7 @@ ul {
     color: white;
     background-color: #04AA6D;
   }
+
+  b a:hover:not(.active) {
+    color: #fd5c63;
+  }

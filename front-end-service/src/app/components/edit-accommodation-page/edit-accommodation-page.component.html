@@ -2,68 +2,76 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit accommodation details</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
+
 <body>
     <section id="edit" class="container mt-3">
         <div class="wholebox">
-                    <div style="color:red;">
-                        {{submitError}}
-                      </div>
-                      <form id="editForm" [formGroup]="accommForm" class="row justify-content-center">
-                    <div class="box1">
-                        <h3>Add new availability period</h3>
-                        <div class="form-group">
-                            <label for="date">Start date:</label>
-                            <input type="date" class="form-control col-md-6"
-                            formControlName="avStartDate" [(ngModel)]="av.startDate"/>
-                            </div>
-                        <div class="form-group">
-                            <label for="date">End date:</label>
-                            <input type="date" class="form-control col-md-6"
-                            formControlName="avEndDate" [(ngModel)]="av.endDate"/>
-                        </div>
-                        <div>
-                            <button type="submit" class="btn btn-primary col-md-6"
-                            (click)="addAvailability()">Add availability</button>
-                        </div>
+            <h1 style="text-align: center;">Edit Accommodation</h1>
+            <br>
+            <div style="color:red;">
+                {{submitError}}
+            </div>
+            <form id="editForm" [formGroup]="accommForm" class="row">
+                <div class="box1">
+                    <h3>Add new availability period</h3>
+                    <div class="form-group">
+                        <label for="date">Start date:</label>
+                        <input type="date" class="form-control" formControlName="avStartDate"
+                            [(ngModel)]="av.startDate" />
                     </div>
-                    <div class="box2">
-                        <h3>Add new price increase period</h3>
-                        <div class="form-group">
-                            <label for="date">Start date:</label>
-                            <input type="date" class="form-control col-md-6"
-                            formControlName="pvStartDate" [(ngModel)]="pv.startDate"/>
-                            </div>
-                        <div class="form-group">
-                            <label for="date">End date:</label>
-                            <input type="date" class="form-control col-md-6"
-                            formControlName="pvEndDate" [(ngModel)]="pv.endDate"/>
-                        </div>
-    
-                        <div class="form-group">
-                            <label for="email">Percentage:</label>
-                            <input type="number" class="form-control col-md-6"
-                            formControlName="percentage" [(ngModel)]="pv.percentage"/>
-                        </div>
-                        <div>
-                            <button type="submit" class="btn btn-primary col-md-6"
-                            (click)="addPriceIncrease()">Add increase</button>
-                        </div>
+                    <div class="form-group">
+                        <label for="date">End date:</label>
+                        <input type="date" class="form-control" formControlName="avEndDate"
+                            [(ngModel)]="av.endDate" />
                     </div>
-                </form>
+                    <div>
+                        <button type="submit" class="btn btn-primary w-100" (click)="addAvailability()">Add
+                            availability</button>
+                    </div>
+                </div>
+                <div class="box2">
+                    <h3>Add new price increase period</h3>
+                    <div class="form-group">
+                        <label for="date">Start date:</label>
+                        <input type="date" class="form-control" formControlName="pvStartDate"
+                            [(ngModel)]="pv.startDate" />
+                    </div>
+                    <div class="form-group">
+                        <label for="date">End date:</label>
+                        <input type="date" class="form-control" formControlName="pvEndDate"
+                            [(ngModel)]="pv.endDate" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Percentage:</label>
+                        <input type="number" class="form-control" formControlName="percentage"
+                            [(ngModel)]="pv.percentage" />
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary w-100" (click)="addPriceIncrease()">Add
+                            increase</button>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-danger w-100" (click)="cancelBtn()" style="margin-top: 10px;">Cancel</button>
+                    </div>
+                </div>
+            </form>
         </div>
 
-        
-        
+
+
     </section>
- 
+
     <!-- Bootstrap & jQuery JS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>

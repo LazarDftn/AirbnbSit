@@ -59,8 +59,8 @@ export class EditAccommodationPageComponent implements OnInit{
     this.av.availabilityId = "00000000-0000-0000-0000-000000000000"
     this.av.location = this.accomm.location
     this.av.name = this.accomm.name
-    this.av.minCapacity = this.av.minCapacity
-    this.av.maxCapacity = this.av.maxCapacity
+    this.av.minCapacity = this.accomm.minCapacity
+    this.av.maxCapacity = this.accomm.maxCapacity
     this.av.startDate = new Date(this.av.startDate)
     this.av.endDate = new Date(this.av.endDate)
 

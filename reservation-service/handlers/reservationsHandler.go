@@ -187,7 +187,13 @@ func (rr *ReservationsHandler) SearchAccommodations(c *gin.Context) {
 		return
 	}
 
-	/*availabilites, err := rr.repo.SearchAccommodations(av)
+	fmt.Print(av.Location)
+	fmt.Print(av.MinCapacity)
+	fmt.Print(av.MaxCapacity)
+	fmt.Print(av.StartDate)
+	fmt.Print(av.EndDate)
+
+	availabilites, err := rr.repo.SearchAccommodations(av)
 	if err != nil {
 		rr.logger.Print("Database exception: ", err)
 	}
@@ -197,7 +203,7 @@ func (rr *ReservationsHandler) SearchAccommodations(c *gin.Context) {
 	}
 
 	e := json.NewEncoder(c.Writer)
-	e.Encode(availabilites)*/
+	e.Encode(availabilites)
 }
 
 func CompareAndCalculate(vr []domain.PriceVariation, res domain.Reservation) (float64, []int) {

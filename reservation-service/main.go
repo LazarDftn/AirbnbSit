@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"reservation-service/handlers"
 	"reservation-service/repositories"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,13 +23,17 @@ func main() {
 	logger := log.New(os.Stdout, "[product-api] ", log.LstdFlags)
 	storeLogger := log.New(os.Stdout, "[reservation-store] ", log.LstdFlags)
 
+	timeoutContext, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	// NoSQL: Initialize Reservation Repository store
-	store, err := repositories.New(storeLogger)
+	store, err := repositories.New(storeLogger, timeoutContext)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	defer store.CloseSession()
+	defer store.CloseSession(timeoutContext)
 	store.CreateTables()
+
+	store.Ping()
 
 	//Initialize the handler and inject said logger
 	reservationHandler := handlers.NewReservationsHandler(logger, store)

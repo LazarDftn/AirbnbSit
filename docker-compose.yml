@@ -54,6 +54,8 @@ services:
     depends_on:
       reservation_db:
         condition: service_healthy
+      reservations_mongo_db:
+        condition: service_healthy
     networks:
       - network  
 
@@ -84,6 +86,20 @@ services:
     image: mongo
     container_name: accommodations_db
     restart: on-failure
+    networks:
+      - network
+
+  reservations_mongo_db:
+    image: mongo
+    container_name: reservations_mongo_db
+    restart: on-failure
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - network
 

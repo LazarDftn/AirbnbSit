@@ -1,24 +1,30 @@
 package repositories
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"reservation-service/domain"
 	"time"
 
-	// NoSQL: module containing Cassandra api client
+	// NoSQL: module containing Cassandra and Mongo api clients
 	"github.com/gocql/gocql"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// NoSQL: ReservationRepo struct encapsulating Cassandra api client
+// NoSQL: ReservationRepo struct encapsulating Cassandra and Mongo api client
 type ReservationRepo struct {
 	session *gocql.Session
 	logger  *log.Logger
+	cli     *mongo.Client
 }
 
 // NoSQL: Constructor which reads db configuration from environment and creates a keyspace
-func New(logger *log.Logger) (*ReservationRepo, error) {
+func New(logger *log.Logger, ctx context.Context) (*ReservationRepo, error) {
 	db := os.Getenv("CASS_DB")
 
 	// Connect to default keyspace
@@ -50,16 +56,41 @@ func New(logger *log.Logger) (*ReservationRepo, error) {
 		return nil, err
 	}
 
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://reservations_mongo_db:27017/"))
+	if err != nil {
+		return nil, err
+	}
+
 	// Return repository with logger and DB session
 	return &ReservationRepo{
 		session: session,
 		logger:  logger,
+		cli:     client,
 	}, nil
 }
 
 // Disconnect from database
-func (rr *ReservationRepo) CloseSession() {
+func (rr *ReservationRepo) CloseSession(ctx context.Context) {
 	rr.session.Close()
+	rr.cli.Disconnect(ctx)
+}
+
+func (rr *ReservationRepo) Ping() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check connection -> if no error, connection is established
+	err := rr.cli.Ping(ctx, readpref.Primary())
+	if err != nil {
+		rr.logger.Println(err)
+	}
+
+	// Print available databases
+	databases, err := rr.cli.ListDatabaseNames(ctx, bson.M{})
+	if err != nil {
+		rr.logger.Println(err)
+	}
+	fmt.Println(databases)
 }
 
 // Create tables
@@ -181,10 +212,34 @@ func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability)
 		rr.logger.Println(err)
 		return "", err
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	avCollection := rr.getAvCollection()
+
+	result, err := avCollection.InsertOne(ctx, &availability)
+	if err != nil {
+		rr.logger.Println(err)
+		return "", err
+	}
+	rr.logger.Println(result.InsertedID)
+
 	return "Changed", nil
 }
 
 func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability) string {
+
+	avCollection := rr.getAvCollection()
+
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	_, err := avCollection.DeleteOne(ctx, bson.M{"accommId": availability.AccommID, "startDate": availability.StartDate})
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "Database error"
+	}
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
 	 AND start_date >= ?`,
@@ -201,7 +256,7 @@ func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability)
 		}
 	}
 
-	err := rr.session.Query(
+	err = rr.session.Query(
 		`DELETE FROM availability_by_accomm WHERE location = ? AND accomm_id = ? AND start_date = ? AND end_date = ?`,
 		availability.Location, availability.AccommID, availability.StartDate, availability.EndDate).Exec()
 
@@ -209,6 +264,7 @@ func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability)
 		rr.logger.Println(err)
 		return "Database error"
 	}
+
 	return ""
 }
 
@@ -498,30 +554,69 @@ func (rr *ReservationRepo) CheckPrice(res domain.Reservation) []domain.PriceVari
 	}
 }
 
-/*
+func (rr *ReservationRepo) getAvCollection() *mongo.Collection {
+	avDatabase := rr.cli.Database("mongoDemo")
+	avCollection := avDatabase.Collection("availabilities")
+	return avCollection
+}
+
 func (rr *ReservationRepo) SearchAccommodations(av domain.Availability) ([]domain.Availability, error) {
 
 	var availabilites []domain.Availability
 
-	scanner := rr.session.Query(`SELECT availability_id, accomm_id, start_date, end_date,
-	name, location, min_capacity, max_capacity
-	FROM availability_by_search_parameters
-	WHERE location = ? AND start_date <= ? AND end_date >= ? AND min_capacity <= ? AND max_capacity >= ?`,
-		av.Location, av.StartDate, av.EndDate, av.MinCapacity, av.MinCapacity).Iter().Scanner()
-
-	for scanner.Next() {
-		var av domain.Availability
-		err := scanner.Scan(&av.AvailabilityID, &av.AccommID, &av.StartDate, &av.EndDate,
-			&av.Name, &av.Location, &av.MinCapacity, &av.MaxCapacity)
-		if err != nil {
-			rr.logger.Println(err)
-			//return nil, err
-		}
-		availabilites = append(availabilites, av)
+	/* filter pretrage je po defaultu filter sa svim parametrima a ispod
+	   su if slucajevi kada korisnik u pretragu ne unese neki od parametara
+	   (ili nijedan od parametara osim perioda bukiranja koji je obavezan)
+	*/
+	filter := bson.M{
+		"location":    av.Location,
+		"minCapacity": bson.M{"$lte": av.MinCapacity},
+		"maxCapacity": bson.M{"$gte": av.MinCapacity},
+		"startDate":   bson.M{"$lte": av.StartDate},
+		"endDate":     bson.M{"$gte": av.EndDate},
 	}
 
-	if err := scanner.Err(); err != nil {
-		rr.logger.Println(err)
+	if av.Location == "" && av.MinCapacity != 0 {
+
+		filter = bson.M{
+			"minCapacity": bson.M{"$lte": av.MinCapacity},
+			"maxCapacity": bson.M{"$gte": av.MinCapacity},
+			"startDate":   bson.M{"$lte": av.StartDate},
+			"endDate":     bson.M{"$gte": av.EndDate},
+		}
+	}
+
+	if av.MinCapacity == 0 && av.Location != "" {
+
+		filter = bson.M{
+			"location":  av.Location,
+			"startDate": bson.M{"$lte": av.StartDate},
+			"endDate":   bson.M{"$gte": av.EndDate},
+		}
+	}
+
+	if av.Location == "" && av.MinCapacity == 0 {
+
+		filter = bson.M{
+			"startDate": bson.M{"$lte": av.StartDate},
+			"endDate":   bson.M{"$gte": av.EndDate},
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := rr.getAvCollection()
+
+	coll, err := collection.Find(ctx, filter)
+
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	if err := coll.All(ctx, &availabilites); err != nil {
+		log.Fatal(err)
 		return nil, err
 	}
 
@@ -530,4 +625,4 @@ func (rr *ReservationRepo) SearchAccommodations(av domain.Availability) ([]domai
 	} else {
 		return nil, nil
 	}
-}*/
+}

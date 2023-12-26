@@ -36,7 +36,7 @@ export class SearchAccommodationPageComponent implements OnInit {
   }
 
   goToAvailable(av: Availability){
-    this.router.navigate(['/accommodation/' + av.accommId])
+    window.open('http://localhost:4200/accommodation/' + av.accommId, '_blank')
   }
 
   search(){
@@ -48,7 +48,9 @@ export class SearchAccommodationPageComponent implements OnInit {
 
     this.reservationService.searchAccommodations(this.availability)
     .subscribe(data => {
-      console.log(data)
+      if (data.body != null){
+        this.availabilities = data.body
+      }
     })
   }
 

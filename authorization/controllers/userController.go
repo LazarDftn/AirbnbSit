@@ -4,10 +4,13 @@ import (
 	"auth/database"
 	helper "auth/helpers"
 	"auth/models"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -138,7 +141,34 @@ func Signup() gin.HandlerFunc {
 			helper.SendVerifEmail(user, code)
 		*/
 
-		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
+		var profile models.Profile
+
+		profile.ID = user.ID
+		profile.Username = user.Username
+		profile.Email = user.Email
+		profile.First_name = user.First_name
+		profile.Last_name = user.Last_name
+		profile.Address = user.Address
+		profile.User_type = user.User_type
+
+		jsonProfile, err := json.Marshal(profile)
+
+		address := os.Getenv("PROFILE_ADDRESS")
+
+		requestBody := bytes.NewReader(jsonProfile)
+		_, err = http.NewRequestWithContext(ctx, http.MethodPost, address+"/create", requestBody)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		var credentials models.UserCredentialsModel
+
+		credentials.Email = user.Email
+		credentials.Password = user.Password
+		credentials.Is_verified = true // Change to false later
+
+		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, credentials)
 		if insertErr != nil {
 			msg := fmt.Sprintf("User item was not created")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
@@ -154,8 +184,9 @@ func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
-		var foundUser models.User
+		var foundUser models.UserCredentialsModel
 		var userLogin models.LoginModel
+		var foundProfile models.Profile
 
 		if err := c.BindJSON(&userLogin); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -185,15 +216,35 @@ func Login() gin.HandlerFunc {
 		if foundUser.Email == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
 		}
-		token, refreshToken, _ := helper.GenerateAllTokens(*foundUser.Username, *foundUser.User_type)
-		helper.UpdateAllTokens(token, refreshToken, foundUser.ID.Hex())
-		err = userCollection.FindOne(ctx, bson.M{"user_id": foundUser.ID.Hex()}).Decode(&foundUser)
+
+		address := os.Getenv("PROFILE_ADDRESS")
+		email := userLogin.Email
+
+		emailStr := *email
+
+		req, err := http.NewRequest(http.MethodGet, address+"/"+emailStr, nil)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		res, err := http.DefaultClient.Do(req)
+
+		err = json.NewDecoder(res.Body).Decode(&foundProfile)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, foundProfile)
+			return
+		}
+
+		token, refreshToken, _ := helper.GenerateAllTokens(*foundProfile.Username, *foundProfile.User_type)
+		helper.UpdateAllTokens(token, refreshToken, foundProfile.ID.Hex())
+		err = userCollection.FindOne(ctx, bson.M{"user_id": foundProfile.ID.Hex()}).Decode(&foundProfile)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, foundUser)
+		c.JSON(http.StatusOK, foundProfile)
 	}
 }
 

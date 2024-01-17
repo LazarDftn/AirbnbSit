@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"profile-service/handlers"
@@ -25,7 +26,7 @@ func main() {
 
 	//Initialize the logger we are going to use, with prefix and datetime for every log
 	logger := log.New(os.Stdout, "[product-api] ", log.LstdFlags)
-	storeLogger := log.New(os.Stdout, "[accommodation-store] ", log.LstdFlags)
+	storeLogger := log.New(os.Stdout, "[profile-store] ", log.LstdFlags)
 
 	store, err := repositories.New(timeoutContext, storeLogger)
 	if err != nil {
@@ -39,16 +40,29 @@ func main() {
 	//Initialize the handler and inject said logger
 	profileHandler := handlers.NewProfileHandler(logger, store)
 
-	router := gin.Default()
-	router.Use(profileHandler.CORSMiddleware())
-	router.GET("/", profileHandler.GetAllProfiles)
+	router := gin.New()
+	//router.Use(profileHandler.CORSMiddleware())
+	router.GET("/profiles", profileHandler.GetAllProfiles)
 	router.GET("/:email", profileHandler.GetProfile)
 	router.POST("/create", profileHandler.Signup)
 
-	// adding the authorization middleware for Guest and Host, depending on the User action route
-	//router.Use(accommodationHandler.Authorize("HOST")).POST("/create", accommodationHandler.PostAccommodation)
-
 	router.Run(":" + port)
+
+		server := http.Server{
+		Addr:         ":" + port,
+		IdleTimeout:  120 * time.Second,
+		ReadTimeout:  1 * time.Second,
+		WriteTimeout: 1 * time.Second,
+	}
+
+	logger.Println("Server listening on port", port)
+	//Distribute all the connections to goroutines
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			logger.Fatal(err)
+		}
+	}()
 
 	sigCh := make(chan os.Signal)
 	signal.Notify(sigCh, os.Interrupt)

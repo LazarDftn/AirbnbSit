@@ -1,19 +1,15 @@
 package handlers
 
 import (
-	"auth/database"
-	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"profile-service/domain"
 	"profile-service/repositories"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ProfileHandler struct {
@@ -33,12 +29,8 @@ func NewProfileHandler(l *log.Logger, r *repositories.ProfileRepo) *ProfileHandl
 	return &ProfileHandler{l, r}
 }
 
-var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
-
 func (p *ProfileHandler) Signup(c *gin.Context) {
 
-	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-	defer cancel()
 	var user domain.User
 
 	if err := c.BindJSON(&user); err != nil {
@@ -46,13 +38,11 @@ func (p *ProfileHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
+	resultInsertionNumber, insertErr := p.repo.Insert(user)
 	if insertErr != nil {
-		msg := fmt.Sprintf("User item was not created")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": insertErr.Error()})
 		return
 	}
-	defer cancel()
 	c.JSON(http.StatusOK, resultInsertionNumber)
 }
 
@@ -73,6 +63,7 @@ func (p *ProfileHandler) GetAllProfiles(c *gin.Context) {
 		p.logger.Fatal("Unable to convert to json :", err)
 		return
 	}
+	c.JSON(http.StatusOK, "SUCCESS")
 
 }
 

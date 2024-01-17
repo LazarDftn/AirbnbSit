@@ -24,7 +24,7 @@ services:
     container_name: profile_service
     hostname: ${PROFILE_SERVICE_HOST}
     build:
-      context: ./profile/
+      context: ./profile-service/
       dockerfile: Dockerfile
     restart: always
     environment:

@@ -116,6 +116,19 @@ func (pr *ProfileRepo) GetProfile(email string) (*domain.User, error) {
 	return &profile, nil
 }
 
+func (pr *ProfileRepo) Insert(user domain.User) (interface{}, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	profileCollection := pr.getCollection()
+
+	res, err := profileCollection.InsertOne(ctx, user)
+
+	return res, err
+
+}
+
 func (ar *ProfileRepo) getCollection() *mongo.Collection {
 	accommDatabase := ar.cli.Database("mongoDemo")
 	accommCollection := accommDatabase.Collection("profiles")

@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -143,7 +144,6 @@ func Signup() gin.HandlerFunc {
 
 		var profile models.Profile
 
-		profile.ID = user.ID
 		profile.Username = user.Username
 		profile.Email = user.Email
 		profile.First_name = user.First_name
@@ -151,15 +151,97 @@ func Signup() gin.HandlerFunc {
 		profile.Address = user.Address
 		profile.User_type = user.User_type
 
-		jsonProfile, err := json.Marshal(profile)
+		jsonProfile, errr := json.Marshal(&profile)
+
+		if errr != nil {
+			fmt.Println(errr)
+		}
 
 		address := os.Getenv("PROFILE_ADDRESS")
+		if len(address) <= 0 {
+			address = "http://profile_service:8000/create"
+		}
+
+		fmt.Println(address)
 
 		requestBody := bytes.NewReader(jsonProfile)
-		_, err = http.NewRequestWithContext(ctx, http.MethodPost, address+"/create", requestBody)
+
+		fmt.Println(requestBody)
+
+		/*client := &http.Client{
+			Transport: &http.Transport{
+				MaxIdleConns:        10,
+				MaxIdleConnsPerHost: 10,
+				MaxConnsPerHost:     10,
+			},
+		}
+
+		breaker := gobreaker.NewCircuitBreaker(
+			gobreaker.Settings{
+				Name:        "user-service",
+				MaxRequests: 1,
+				Timeout:     10 * time.Second,
+				Interval:    0,
+				OnStateChange: func(name string, from gobreaker.State, to gobreaker.State) {
+					log.Printf("Circuit Breaker %v: %v -> %v", name, from, to)
+				},
+			},
+		)
+
+		cb, err := breaker.Execute(func() (interface{}, error) {
+
+			req, err := http.NewRequestWithContext(ctx, http.MethodPost, address+"/create", requestBody)
+			if err != nil {
+				return nil, err
+			}
+			return client.Do(req)
+		})
+
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, err.Error())
+			c.JSON(http.StatusOK, err.Error())
 			return
+		}
+		resp := cb.(*http.Response)
+		if resp.StatusCode >= 200 && resp.StatusCode < 400 {
+			if err != nil {
+				c.JSON(http.StatusOK, err.Error())
+				return
+			}
+		}*/
+
+		req, err := http.NewRequestWithContext(ctx, "POST", address, requestBody)
+		if err != nil {
+			fmt.Println("Error creating request:", err)
+			return
+		}
+
+		//req.Header.Add("Authorization", "Bearer Nesa")
+
+		client := http.Client{Transport: &http.Transport{
+			MaxIdleConns:        10,
+			MaxIdleConnsPerHost: 10,
+			MaxConnsPerHost:     10,
+		}}
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println("Error making request:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"body": resp.Body, "error": err.Error()})
+			return
+		} else {
+			fmt.Println(resp.Body)
+			c.JSON(http.StatusInternalServerError, gin.H{"body": resp.Body})
+		}
+		defer resp.Body.Close()
+
+		// Read the response body
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading response body:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"body": body, "error": err.Error()})
+			return
+		} else {
+			fmt.Println(body)
+			c.JSON(http.StatusInternalServerError, gin.H{"body": body})
 		}
 
 		var credentials models.UserCredentialsModel
@@ -170,7 +252,7 @@ func Signup() gin.HandlerFunc {
 
 		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, credentials)
 		if insertErr != nil {
-			msg := fmt.Sprintf("User item was not created")
+			msg := fmt.Sprintf("User itemmm was not created")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return
 		}

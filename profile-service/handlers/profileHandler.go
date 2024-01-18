@@ -38,12 +38,24 @@ func (p *ProfileHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	resultInsertionNumber, insertErr := p.repo.Insert(user)
+	res := p.repo.CheckUsernameExists(*user.Username)
+
+	if res == "error" {
+		c.JSON(419, gin.H{"error": "Error searching for identical usernames!"})
+		return
+	}
+
+	if res != "" {
+		c.JSON(418, gin.H{"error": "This username already exists!"})
+		return
+	}
+
+	_, insertErr := p.repo.Insert(user)
 	if insertErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": insertErr.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, resultInsertionNumber)
+	c.JSON(http.StatusOK, "SUCCESS")
 }
 
 func (p *ProfileHandler) GetAllProfiles(c *gin.Context) {
@@ -74,20 +86,17 @@ func (p *ProfileHandler) GetProfile(c *gin.Context) {
 	profile, err := p.repo.GetProfile(email)
 
 	if profile == nil {
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err != nil {
 		fmt.Print(err.Error())
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = profile.ToJSON(c.Writer)
-	if err != nil {
-		http.Error(c.Writer, "Unable to convert to json", http.StatusInternalServerError)
-		p.logger.Fatal("Unable to convert to json :", err)
-		return
-	}
+	c.JSON(http.StatusOK, profile)
 }
 
 func (p *ProfileHandler) CORSMiddleware() gin.HandlerFunc {

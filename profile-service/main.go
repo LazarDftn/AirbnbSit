@@ -48,7 +48,7 @@ func main() {
 
 	router.Run(":" + port)
 
-		server := http.Server{
+	server := http.Server{
 		Addr:         ":" + port,
 		IdleTimeout:  120 * time.Second,
 		ReadTimeout:  1 * time.Second,

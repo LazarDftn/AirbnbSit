@@ -6,5 +6,5 @@
   <li *ngIf="isUserGuest"><a href="#">Book now!</a></li>
   <li *ngIf="isUserLoggedIn"><a href="#">Profile</a></li>
   <b *ngIf="isUserLoggedIn"><a (click)="logout()" style="cursor: pointer;">Log out</a></b>
-  <b>{{email}}</b>
+  <b>{{username}}</b>
 </ul>

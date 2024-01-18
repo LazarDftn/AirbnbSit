@@ -129,6 +129,25 @@ func (pr *ProfileRepo) Insert(user domain.User) (interface{}, error) {
 
 }
 
+func (pr *ProfileRepo) CheckUsernameExists(username string) string {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	profileCollection := pr.getCollection()
+
+	count, err := profileCollection.CountDocuments(ctx, bson.M{"username": username})
+	if err != nil {
+		pr.logger.Println(err)
+		return "error"
+	}
+
+	if count > 0 {
+		return "username exists"
+	}
+
+	return ""
+}
+
 func (ar *ProfileRepo) getCollection() *mongo.Collection {
 	accommDatabase := ar.cli.Database("mongoDemo")
 	accommCollection := accommDatabase.Collection("profiles")

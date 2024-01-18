@@ -114,6 +114,7 @@ export class AuthService {
       localStorage.removeItem("airbnbToken")
       localStorage.removeItem("airbnbEmail")
       localStorage.removeItem("airbnbRole")
+      localStorage.removeItem("airbnbUsername")
 
       this.router.navigate(['/login-page'])
     }

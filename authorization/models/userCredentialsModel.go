@@ -5,7 +5,7 @@ import (
 )
 
 type UserCredentialsModel struct {
-	ID            primitive.ObjectID `bson:"_id"`
+	ID            primitive.ObjectID `bson:"_id,omitempty"`
 	Email         *string            `json:"email" validate:"required"`
 	Password      *string            `json:"Password" validate:"required,min=12"`
 	Is_verified   bool               `json:"is_verified"`

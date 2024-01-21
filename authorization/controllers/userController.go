@@ -4,6 +4,7 @@ import (
 	"auth/database"
 	helper "auth/helpers"
 	"auth/models"
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -11,12 +12,15 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/d-vignesh/go-jwt-auth/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,6 +30,7 @@ import (
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
 var emailVerifCollection *mongo.Collection = database.OpenCollection(database.Client, "emailVerif")
 var validate = validator.New()
+var address string
 
 func HashPassword(password string) string {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -33,6 +38,17 @@ func HashPassword(password string) string {
 		log.Panic(err)
 	}
 	return string(bytes)
+}
+
+func SetAddress() {
+
+	envFile, err := godotenv.Read(".env")
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	address = envFile["PROFILE_ADDRESS"]
 }
 
 func VerifyPassword(userPassword string, providedPassword string) (bool, string) {
@@ -71,10 +87,11 @@ func Signup() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the email"})
 		}
 
+		unhashedPassword := *user.Password
 		password := HashPassword(*user.Password)
 		user.Password = &password
 
-		/*file, err := os.Open("authorization/controllers/blacklist.txt")
+		file, err := os.Open("blacklist.txt")
 
 		// Error finding the blacklist.txt file no matter what path we try to use
 
@@ -94,25 +111,23 @@ func Signup() gin.HandlerFunc {
 
 		file.Close()
 
-		var found = ""
+		var found string
 
 		for _, line := range fileLines {
-			if strings.Contains(password, line) {
+			if strings.Contains(unhashedPassword, line) {
 				found = line
 			}
 		}
 
 		if found != "" {
-			log.Panic(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "This password is on Blacklist, please change it"})
+			return
 		}
-
-		*/
 
 		usernameCount, err := userCollection.CountDocuments(ctx, bson.M{"username": user.Username})
 		if err != nil {
-			log.Panic(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the username"})
+			return
 		}
 
 		if emailCount > 0 {
@@ -156,7 +171,7 @@ func Signup() gin.HandlerFunc {
 			fmt.Println(errr)
 		}
 
-		address := "http://profile_service:8000/"
+		SetAddress()
 
 		fmt.Println(address)
 
@@ -176,7 +191,7 @@ func Signup() gin.HandlerFunc {
 		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Println("Error making request:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to register account right now!"})
 			return
 		} else {
 			if resp.StatusCode == 418 {
@@ -193,7 +208,7 @@ func Signup() gin.HandlerFunc {
 		_, err = io.ReadAll(resp.Body)
 		if err != nil {
 			fmt.Println("Error reading response body:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to register account right now!"})
 			return
 		}
 
@@ -256,11 +271,11 @@ func Login() gin.HandlerFunc {
 		if foundUser.Email == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
 		}
-
-		address := "http://profile_service:8000/"
 		email := userLogin.Email
 
 		emailStr := *email
+
+		SetAddress()
 
 		req, err := http.NewRequest(http.MethodGet, address+emailStr, nil)
 		if err != nil {

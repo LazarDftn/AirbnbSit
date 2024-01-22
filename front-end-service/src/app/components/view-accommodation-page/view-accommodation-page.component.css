@@ -66,3 +66,21 @@
 .startEndDatesBox{
     padding: 20px;
 }
+
+table{
+    width: 100%;
+    border: 1px solid #ddd;
+    margin-bottom: 15px;
+}
+
+th, td {
+    font-size: 20px;
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
+ th{
+    background-color: #04AA6D;
+ } 
+ 

@@ -101,8 +101,8 @@ func (rr *ReservationRepo) CreateTables() {
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(location text, accomm_id text, reservation_id UUID, guest_email text, host_email text, price int, 
 					num_of_People int, start_date timestamp, end_date timestamp, 
-					PRIMARY KEY ((location), accomm_id, start_date, reservation_id)) 
-					WITH CLUSTERING ORDER BY (accomm_id ASC, start_date DESC, reservation_id ASC)`,
+					PRIMARY KEY ((location), accomm_id, end_date, reservation_id)) 
+					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date DESC, reservation_id ASC)`,
 			"reservation_by_accommodation")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -137,8 +137,8 @@ func (rr *ReservationRepo) CreateTables() {
 	err = rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(variation_id UUID, location text, accomm_id text, percentage int, start_date timestamp, end_date timestamp, 
-					PRIMARY KEY ((location), accomm_id, start_date, end_date, variation_id)) 
-					WITH CLUSTERING ORDER BY (accomm_id ASC, start_date DESC, end_date DESC, variation_id ASC)`,
+					PRIMARY KEY ((location), accomm_id, end_date, start_date, variation_id)) 
+					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date DESC, start_date DESC, variation_id ASC)`,
 			"variation_by_accomm_and_interval")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -149,8 +149,8 @@ func (rr *ReservationRepo) CreateTables() {
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(availability_id UUID, accomm_id text, start_date timestamp, end_date timestamp,
 					name text, location text, min_capacity int, max_capacity int, 
-					PRIMARY KEY ((location), accomm_id, start_date, end_date)) 
-					WITH CLUSTERING ORDER BY (accomm_id ASC, start_date DESC, end_date DESC)`,
+					PRIMARY KEY ((location), accomm_id, end_date, start_date)) 
+					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date DESC, start_date DESC)`,
 			"availability_by_accomm")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -160,8 +160,8 @@ func (rr *ReservationRepo) CreateTables() {
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(availability_id UUID, accomm_id text, start_date timestamp, end_date timestamp,
 					name text, location text, min_capacity int, max_capacity int, 
-					PRIMARY KEY ((location), start_date, end_date)) 
-					WITH CLUSTERING ORDER BY (start_date DESC, end_date DESC)`,
+					PRIMARY KEY ((location), end_date, start_date)) 
+					WITH CLUSTERING ORDER BY (end_date DESC, start_date DESC)`,
 			"availability_by_search_parameters")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -172,7 +172,7 @@ func (rr *ReservationRepo) CreateTables() {
 func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability) (string, error) {
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND accomm_id = ?
-	 AND start_date >= ?`,
+	 AND end_date >= ?`,
 		availability.Location, availability.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
@@ -187,7 +187,7 @@ func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability)
 	}
 
 	scanner = rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
-	 AND start_date >= ?`,
+	 AND end_date >= ?`,
 		availability.Location, availability.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
@@ -242,7 +242,7 @@ func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability)
 	}
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
-	 AND start_date >= ?`,
+	 AND end_date >= ?`,
 		availability.Location, availability.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
@@ -298,7 +298,7 @@ func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation
 	isAvailable := false
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND 
-	accomm_id = ? AND start_date >= ?`,
+	accomm_id = ? AND end_date >= ?`,
 		variation.Location, variation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
@@ -318,7 +318,7 @@ func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation
 	}
 
 	scanner = rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
-	 AND start_date >= ?`,
+	 AND end_date >= ?`,
 		variation.Location, variation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
@@ -333,7 +333,7 @@ func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation
 	}
 
 	scanner = rr.session.Query(`SELECT start_date, end_date FROM variation_by_accomm_and_interval WHERE location = ? AND accomm_id = ?
-	 AND start_date >= ?`,
+	 AND end_date >= ?`,
 		variation.Location, variation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
@@ -362,7 +362,7 @@ func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation
 
 func (rr *ReservationRepo) GetVariationsByAccommId(location string, id string) ([]domain.PriceVariation, error) {
 	scanner := rr.session.Query(`SELECT variation_id, location, accomm_id, percentage, start_date, end_date FROM variation_by_accomm_and_interval 
-	WHERE location = ? AND accomm_id = ? AND start_date >= ?`,
+	WHERE location = ? AND accomm_id = ? AND end_date >= ?`,
 		location, id, time.Now()).Iter().Scanner()
 
 	var foundVariations []domain.PriceVariation
@@ -385,7 +385,7 @@ func (rr *ReservationRepo) GetVariationsByAccommId(location string, id string) (
 func (rr *ReservationRepo) DeletePriceVariation(pv *domain.PriceVariation) string {
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
-	 AND start_date >= ?`,
+	 AND end_date >= ?`,
 		pv.Location, pv.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
@@ -455,7 +455,7 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 	isAvailable := false
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND 
-	accomm_id = ? AND start_date >= ?`,
+	accomm_id = ? AND end_date >= ?`,
 		reservation.Location, reservation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
@@ -475,7 +475,7 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 	}
 
 	scanner = rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
-	 AND start_date >= ?`,
+	 AND end_date >= ?`,
 		reservation.Location, reservation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
@@ -532,7 +532,7 @@ func (rr *ReservationRepo) CheckPrice(res domain.Reservation) []domain.PriceVari
 	var variations []domain.PriceVariation
 
 	scanner := rr.session.Query(`SELECT accomm_id, percentage, start_date, end_date FROM variation_by_accomm_and_interval 
-	WHERE location = ? AND accomm_id = ? AND start_date >= ?`,
+	WHERE location = ? AND accomm_id = ? AND end_date >= ?`,
 		res.Location, res.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {

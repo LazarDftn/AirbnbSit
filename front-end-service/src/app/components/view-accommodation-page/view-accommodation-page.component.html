@@ -56,7 +56,7 @@
                     <div class="form-group">
                         <label for="payPer">Select payment method:</label>
                         <select [(ngModel)]="accomm.payPer" class="form-control" name="payPer">
-                            <option value="" selected>Not per guest</option>
+                            <option value="" selected>Per day</option>
                             <option value="per guest">Per guest</option>
                         </select>
                     </div>
@@ -104,8 +104,7 @@
                     <div *ngFor="let av of availabilities">
                         <p><b>FROM</b> {{ av.startDate.toString().slice(0,10) }} <b>TO</b> {{ av.endDate.toString().slice(0,10) }}</p>
                         <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
-                            <button (click)="deleteAvailability(av)" class="btn btn-primary w-100">Delete
-                                Availability</button>
+                            <button (click)="deleteAvailability(av)" class="btn btn-primary w-100">Delete Availability</button>
                         </div>
                     </div>
                     <hr>

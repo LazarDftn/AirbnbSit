@@ -5,6 +5,7 @@ import { User } from '../model/user';
 import { ApiService } from './api.service';
 import { ConfigService } from './config.service';
 import { Router } from '@angular/router';
+import { UserProfile } from '../model/userProfile';
 
 @Injectable({
   providedIn: 'root'
@@ -145,5 +146,27 @@ export class AuthService {
         return true
       }
       return false
+    }
+
+    deleteAccount() {
+
+      var userDTO = {
+        first_name: "",
+        last_name: "",
+        username: localStorage.getItem("airbnbUsername"),
+        email: localStorage.getItem("airbnbEmail"),
+        address: "",
+        token: localStorage.getItem("airbnbToken"),
+        user_type: localStorage.getItem("airbnbRole"),
+        refresh_token: "",
+        is_verified: true
+      }
+
+      console.log(userDTO)
+
+      return this.apiService.delete(this.config.delete_account_url, JSON.stringify(userDTO))
+      .pipe(map((data) => {
+        return data
+      }));
     }
   }

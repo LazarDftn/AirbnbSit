@@ -148,6 +148,18 @@ func (pr *ProfileRepo) CheckUsernameExists(username string) string {
 	return ""
 }
 
+func (pr *ProfileRepo) Delete(email string) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	profileCollection := pr.getCollection()
+
+	_, err := profileCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: email}})
+
+	return err
+}
+
 func (ar *ProfileRepo) getCollection() *mongo.Collection {
 	accommDatabase := ar.cli.Database("mongoDemo")
 	accommCollection := accommDatabase.Collection("profiles")

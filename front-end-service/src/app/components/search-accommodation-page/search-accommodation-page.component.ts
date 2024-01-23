@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Accommodation } from 'src/app/model/accommodation';
 import { Availability } from 'src/app/model/availability';
+import { UserProfile } from 'src/app/model/userProfile';
 import { AccommodationService } from 'src/app/services/accommodation.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ReservationService } from 'src/app/services/reservation.service';

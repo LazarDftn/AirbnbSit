@@ -50,12 +50,12 @@ func (p *ProfileHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	_, insertErr := p.repo.Insert(user)
+	result, insertErr := p.repo.Insert(user)
 	if insertErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": insertErr.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, "SUCCESS")
+	c.JSON(http.StatusOK, result)
 }
 
 func (p *ProfileHandler) GetAllProfiles(c *gin.Context) {
@@ -99,12 +99,27 @@ func (p *ProfileHandler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, profile)
 }
 
+func (p *ProfileHandler) DeleteProfile(c *gin.Context) {
+
+	email := c.Param("email")
+
+	err := p.repo.Delete(email)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, "")
+		return
+	}
+
+	c.JSON(http.StatusOK, "")
+}
+
 func (p *ProfileHandler) CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)

@@ -25,6 +25,7 @@ export class ConfigService {
   private _delete_price_variation_url = this._api_url + "/reservation/host/accommodation/price-variation/delete"
   private _reservation_url = this._api_url + "/reservation/guest/"
   private _search_accomm_url = this._api_url + "/reservation/search/"
+  private _delete_account_url = this._api_url + "/users/delete-account"
 
   get accommodations_url(): string {
     return this._accommodations_url;
@@ -100,5 +101,9 @@ export class ConfigService {
 
   get search_accomm_url(): string {
     return this._search_accomm_url
+  }
+
+  get delete_account_url(): string {
+    return this._delete_account_url
   }
 }

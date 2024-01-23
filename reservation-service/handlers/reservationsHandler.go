@@ -313,12 +313,56 @@ func (r *ReservationsHandler) GetAvailability(c *gin.Context) {
 	e.Encode(availability)
 }
 
+func (r *ReservationsHandler) GetPendingReservationsByUser(c *gin.Context) {
+
+	var user domain.User
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	isPending, err := r.repo.GetPendingReservationsByUser(*user.User_type, *user.Email)
+
+	if err != nil {
+		c.JSON(418, gin.H{"error": "This user has pending reservations!"})
+		return
+	}
+
+	if isPending {
+		c.JSON(418, gin.H{"error": "This user has pending reservations!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, "")
+}
+
+func (r *ReservationsHandler) DeleteReservation(c *gin.Context) {
+
+	var res domain.Reservation
+
+	if err := c.ShouldBindJSON(&res); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	_, err := r.repo.DeleteReservation(res)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, "")
+}
+
 func (r *ReservationsHandler) CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)

@@ -52,6 +52,7 @@ func main() {
 	rg1.POST("/check-price/", reservationHandler.CheckPrice)
 	rg1.GET("/availability/:location/:accomm_id", reservationHandler.GetAvailability)
 	rg1.POST("/search/", reservationHandler.SearchAccommodations)
+	rg1.POST("/check-pending/", reservationHandler.GetPendingReservationsByUser)
 
 	rg2.POST("/accommodation-price/", reservationHandler.PostPrice)
 	rg2.POST("/accommodation/price-variation/", reservationHandler.CreatePriceVariation)
@@ -60,6 +61,7 @@ func main() {
 	rg2.POST("/availability/delete", reservationHandler.DeleteAvailability)
 
 	rg3.POST("/", reservationHandler.PostReservation)
+	rg3.POST("/delete/", reservationHandler.DeleteReservation)
 
 	// adding the authorization middleware for Guest and Host, depending on the User action route
 	// router.Use(accommodationHandler.Authorize("HOST")).POST("/create", accommodationHandler.PostAccommodation)

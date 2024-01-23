@@ -14,4 +14,5 @@ func AuthRoutes(incomingRoutes *gin.Engine) {
 	incomingRoutes.POST("/verify-account", controller.VerifyAccount())
 	incomingRoutes.POST("/password-code", controller.CreatePasswordRecoveryCode())
 	incomingRoutes.POST("/forgot-password", controller.ForgotPassword())
+	incomingRoutes.DELETE("/delete-account", controller.DeleteAccount())
 }

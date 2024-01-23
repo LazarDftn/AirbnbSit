@@ -30,7 +30,9 @@ import (
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
 var emailVerifCollection *mongo.Collection = database.OpenCollection(database.Client, "emailVerif")
 var validate = validator.New()
-var address string
+var profileAddress string
+var resAddress string
+var accommAddress string
 
 func HashPassword(password string) string {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -48,7 +50,9 @@ func SetAddress() {
 		fmt.Println(err.Error())
 	}
 
-	address = envFile["PROFILE_ADDRESS"]
+	profileAddress = envFile["PROFILE_ADDRESS"]
+	resAddress = envFile["RESERVATION_ADDRESS"]
+	accommAddress = envFile["ACCOMMODATION_ADDRESS"]
 }
 
 func VerifyPassword(userPassword string, providedPassword string) (bool, string) {
@@ -173,11 +177,11 @@ func Signup() gin.HandlerFunc {
 
 		SetAddress()
 
-		fmt.Println(address)
+		fmt.Println(profileAddress)
 
 		requestBody := bytes.NewReader(jsonProfile)
 
-		req, err := http.NewRequestWithContext(ctx, "POST", address+"create", requestBody)
+		req, err := http.NewRequestWithContext(ctx, "POST", profileAddress+"create", requestBody)
 		if err != nil {
 			fmt.Println("Error creating request:", err)
 			return
@@ -248,8 +252,6 @@ func Login() gin.HandlerFunc {
 			return
 		}
 
-		fmt.Print(userLogin.Email)
-
 		err := userCollection.FindOne(ctx, bson.M{"email": userLogin.Email}).Decode(&foundUser)
 		defer cancel()
 		if err != nil {
@@ -277,7 +279,7 @@ func Login() gin.HandlerFunc {
 
 		SetAddress()
 
-		req, err := http.NewRequest(http.MethodGet, address+emailStr, nil)
+		req, err := http.NewRequest(http.MethodGet, profileAddress+emailStr, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
 			return
@@ -309,6 +311,124 @@ func Login() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, foundProfile)
+	}
+}
+
+func DeleteAccount() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+		var profile models.Profile
+
+		fmt.Println(profile)
+
+		if err := c.BindJSON(&profile); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		fmt.Println(profile)
+
+		jsonProfile, err := json.Marshal(profile)
+
+		fmt.Println(jsonProfile)
+
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		requestBody := bytes.NewReader(jsonProfile)
+
+		req, err := http.NewRequest(http.MethodPost, resAddress+"check-pending/", requestBody)
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
+			return
+		}
+
+		res, errClient := http.DefaultClient.Do(req)
+
+		if errClient != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "You have pending reservations!"})
+			return
+		}
+		if res.StatusCode != 200 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "You have pending reservations!"})
+			return
+		}
+
+		req, err = http.NewRequest(http.MethodDelete, accommAddress+*profile.Email, nil)
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
+			return
+		}
+
+		res, errClient = http.DefaultClient.Do(req)
+
+		if errClient != nil {
+			fmt.Println(errClient.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting your accommodations!"})
+			return
+		}
+		if res.StatusCode != 200 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting your accommodations!"})
+			return
+		}
+
+		req, err = http.NewRequest(http.MethodDelete, profileAddress+*profile.Email, nil)
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
+			return
+		}
+
+		res, errClient = http.DefaultClient.Do(req)
+
+		if errClient != nil {
+			fmt.Println(errClient.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your accommodations!"})
+			return
+		}
+		if res.StatusCode != 200 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your accommodations!"})
+			return
+		}
+
+		req, err = http.NewRequest(http.MethodDelete, profileAddress+*profile.Email, nil)
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
+			return
+		}
+
+		res, errClient = http.DefaultClient.Do(req)
+
+		if errClient != nil {
+			fmt.Println(errClient.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your profile!"})
+			return
+		}
+		if res.StatusCode != 200 {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your profile!"})
+			return
+		}
+
+		fmt.Println(profile.Email)
+
+		_, err = userCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: profile.Email}})
+
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your profile!"})
+			return
+		}
+
+		c.JSON(http.StatusOK, "account deleted successfully!")
 	}
 }
 

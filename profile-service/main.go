@@ -45,6 +45,7 @@ func main() {
 	router.GET("/profiles", profileHandler.GetAllProfiles)
 	router.GET("/:email", profileHandler.GetProfile)
 	router.POST("/create", profileHandler.Signup)
+	router.DELETE("/:email", profileHandler.DeleteProfile)
 
 	router.Run(":" + port)
 

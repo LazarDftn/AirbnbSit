@@ -101,20 +101,22 @@ func (rr *ReservationRepo) CreateTables() {
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(location text, accomm_id text, reservation_id UUID, guest_email text, host_email text, price int, 
 					num_of_People int, start_date timestamp, end_date timestamp, 
-					PRIMARY KEY ((location), accomm_id, end_date, reservation_id)) 
-					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date DESC, reservation_id ASC)`,
+					PRIMARY KEY ((location), accomm_id, end_date, start_date, reservation_id)) 
+					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date DESC, start_date DESC, reservation_id ASC)`,
 			"reservation_by_accommodation")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 	}
 
-	// table for reservations that are relevant to a guest (he wants to see all of the reservations he made)
-	/*err = rr.session.Query(
+	/* table for reservations that are relevant to a user (guest - when he wants to delete his reservations and
+	   both guest and host - when the service is checking their pending reservations before deleting their account)
+	*/
+	err = rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s
-					(guest_email text, reservation_id UUID, accomm_id text, price int, num_of_People int, start_date timestamp, end_date timestamp,
-					PRIMARY KEY ((guest_email), reservation_id, accomm_id))
-					WITH CLUSTERING ORDER BY (reservation_id ASC, accomm_id ASC)`,
-			"reservation_by_guest")).Exec()
+					(role text, email text, end_date timestamp, accomm_id text, location text, start_date timestamp,
+					PRIMARY KEY ((role), email, end_date, accomm_id, start_date))
+					WITH CLUSTERING ORDER BY (email ASC, end_date ASC, accomm_id ASC, start_date ASC)`,
+			"reservation_by_user")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 	}
@@ -257,8 +259,8 @@ func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability)
 	}
 
 	err = rr.session.Query(
-		`DELETE FROM availability_by_accomm WHERE location = ? AND accomm_id = ? AND start_date = ? AND end_date = ?`,
-		availability.Location, availability.AccommID, availability.StartDate, availability.EndDate).Exec()
+		`DELETE FROM availability_by_accomm WHERE location = ? AND accomm_id = ? AND end_date = ? AND start_date = ?`,
+		availability.Location, availability.AccommID, availability.EndDate, availability.StartDate).Exec()
 
 	if err != nil {
 		rr.logger.Println(err)
@@ -500,7 +502,81 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 		rr.logger.Println(err)
 		return err.Error()
 	}
+
+	err = rr.session.Query(
+		`INSERT INTO reservation_by_user (role, email, end_date, accomm_id, location, start_date) 
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		"GUEST", reservation.GuestEmail, reservation.EndDate, reservation.AccommID, reservation.Location,
+		reservation.StartDate).Exec()
+	if err != nil {
+		rr.logger.Println(err)
+		return err.Error()
+	}
+
+	err = rr.session.Query(
+		`INSERT INTO reservation_by_user (role, email, end_date, accomm_id, location, start_date) 
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		"HOST", reservation.HostEmail, reservation.EndDate, reservation.AccommID, reservation.Location,
+		reservation.StartDate).Exec()
+	if err != nil {
+		rr.logger.Println(err)
+		return err.Error()
+	}
+
 	return ""
+}
+
+func (rr *ReservationRepo) GetPendingReservationsByUser(role string, email string) (bool, error) {
+
+	scanner := rr.session.Query(`SELECT location FROM reservation_by_user WHERE role = ? AND email = ? 
+	AND end_date >= ?`,
+		role, email, time.Now()).Iter().Scanner()
+
+	for scanner.Next() {
+		return true, nil
+	}
+
+	if scanner.Err() != nil {
+		rr.logger.Println(scanner.Err().Error())
+		return true, scanner.Err()
+	}
+
+	return false, nil
+}
+
+func (rr *ReservationRepo) DeleteReservation(res domain.Reservation) (string, error) {
+
+	err := rr.session.Query(
+		`DELETE FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ? AND end_date = ? 
+		AND start_date > ?`,
+		res.Location, res.AccommID, res.EndDate, time.Now()).Exec()
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "", err
+	}
+
+	err = rr.session.Query(
+		`DELETE FROM reservation_by_user WHERE role = ? AND email = ? AND end_date = ? 
+		AND accomm_id = ? AND start_date > ?`,
+		"GUEST", res.GuestEmail, res.EndDate, res.AccommID, time.Now()).Exec()
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "", err
+	}
+
+	err = rr.session.Query(
+		`DELETE FROM reservation_by_user WHERE role = ? AND email = ? AND end_date = ? 
+		AND accomm_id = ? AND start_date > ?`,
+		"HOST", res.HostEmail, res.EndDate, res.AccommID, time.Now()).Exec()
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "", err
+	}
+
+	return "success", nil
 }
 
 func (rr *ReservationRepo) GetReservationsByAccomm(location string, id string) (domain.Reservations, error) {

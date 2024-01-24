@@ -351,8 +351,8 @@ func DeleteAccount() gin.HandlerFunc {
 		res, errClient := http.DefaultClient.Do(req)
 
 		if errClient != nil {
-			fmt.Println(err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "You have pending reservations!"})
+			//fmt.Println(errClient.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
 			return
 		}
 		if res.StatusCode != 200 {
@@ -370,8 +370,8 @@ func DeleteAccount() gin.HandlerFunc {
 		res, errClient = http.DefaultClient.Do(req)
 
 		if errClient != nil {
-			fmt.Println(errClient.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting your accommodations!"})
+			//fmt.Println(errClient.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
 			return
 		}
 		if res.StatusCode != 200 {
@@ -389,8 +389,8 @@ func DeleteAccount() gin.HandlerFunc {
 		res, errClient = http.DefaultClient.Do(req)
 
 		if errClient != nil {
-			fmt.Println(errClient.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your accommodations!"})
+			//fmt.Println(errClient.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
 			return
 		}
 		if res.StatusCode != 200 {

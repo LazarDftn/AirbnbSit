@@ -41,6 +41,7 @@ export class CreateAccommodationPageComponent implements OnInit {
     if (this.accommForm.valid && this.accommodation.maxCapacity >= this.accommodation.minCapacity) {
     this.accommodationService.create(this.accommodation).subscribe(data => 
       {this.router.navigate(['accommodation/' + data.body])});
+      this.toastr.success("Successfully created an Accommodation!", "Success");
     } else {
       this.toastr.warning("Form is invalid!", "Warning");
     }

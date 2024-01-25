@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Route, Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { Accommodation } from 'src/app/model/accommodation';
 import { Availability } from 'src/app/model/availability';
 import { PriceVariation } from 'src/app/model/priceVariation';
@@ -26,7 +27,8 @@ export class EditAccommodationPageComponent implements OnInit{
     private route: ActivatedRoute,
     private reservationService: ReservationService,
     private authService: AuthService,
-    private fb: FormBuilder){}
+    private fb: FormBuilder,
+    private toastr: ToastrService){}
 
   ngOnInit(): void {
 
@@ -70,6 +72,7 @@ export class EditAccommodationPageComponent implements OnInit{
         this.submitError = data.body
       } else {
         this.router.navigate(['accommodation/' + this.accomm.id])
+        this.toastr.success("Successfully added Availabilty"!, "Success");
       }
     })
   }
@@ -89,6 +92,7 @@ export class EditAccommodationPageComponent implements OnInit{
         this.submitError = data.body
       } else {
         this.router.navigate(['accommodation/' + this.accomm.id])
+        this.toastr.success("Successfully added new increase period!", "Success");
       }
     })
   }

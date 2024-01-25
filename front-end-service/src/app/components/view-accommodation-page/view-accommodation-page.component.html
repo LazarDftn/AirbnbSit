@@ -44,7 +44,8 @@
                 </div>
 
 
-                <div *ngIf="price == 0 && this.authService.userHasEmail(this.accomm.Owner)">
+                <div class="priceBox" *ngIf="price == 0 && this.authService.userHasEmail(this.accomm.Owner)">
+                    <h3>Add Price</h3>
                     <div class="form-group">
                         <label for="price">Price:</label>
                         <input type="number" class="form-control" [(ngModel)]="accomm.price" name="price"
@@ -112,8 +113,8 @@
                                 <td>{{ av.endDate.toString().slice(0,10) }}</td>
                             </tr>
                         </table>
-                        <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
-                            <button (click)="deleteAvailability(av)" class="btn btn-primary w-100">Delete Availability</button>
+                        <div *ngIf="this.authService.userHasEmail(accomm.Owner)" class="row justify-content-center">
+                            <button (click)="deleteAvailability(av)" class="btn btn-outline-danger w-50" style="margin-bottom: 10px;">Delete Availability</button>
                         </div>
                     </div>
                     <hr>
@@ -122,8 +123,7 @@
                 <div class="reservations-box">
                     <h3>Reservations Dates for this home</h3>
                     <div *ngFor="let res of reservations" class="singleReservationBox">
-                        <p><b>FROM</b> {{ res.startDate.toString().slice(0,10) }} <b>TO</b> {{ res.endDate.toString().slice(0,10) }}</p>
-                        <!-- <p><b>Reservation Info</b></p> -->
+                        <p id="reservationId"><b>FROM</b> {{ res.startDate.toString().slice(0,10) }} <b>TO</b> {{ res.endDate.toString().slice(0,10) }}</p>
                         <p
                             *ngIf="this.authService.userHasEmail(accomm.Owner) || this.authService.userHasEmail(res.guestEmail)">
                             <b>Reservation User:</b> {{ res.guestEmail }}
@@ -132,8 +132,8 @@
                             <br>
                             <b>Price:</b> ${{ res.price }}
                         </p>
-                        <button *ngIf="this.authService.userHasEmail(res.guestEmail)" (click)="cancelReservation(res)">
-                            cancel
+                        <button class="btn btn-danger" id="btnCnclRes" *ngIf="this.authService.userHasEmail(res.guestEmail)" (click)="cancelReservation(res)">
+                            Cancel your Reservation
                         </button>
                     </div>
                     <hr>

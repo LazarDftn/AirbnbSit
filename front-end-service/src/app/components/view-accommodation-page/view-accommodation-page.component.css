@@ -58,6 +58,19 @@
     padding: 20px;
     margin-bottom: 10px;
 }
+#reservationId{
+    font-size: 22px;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid black;
+}
+#btnCnclRes{
+    width: 100%;
+}
+
+.priceBox{
+    padding: 20px;
+}
 
 .priceChanges-box {
     padding: 20px;
@@ -76,7 +89,7 @@ table{
 th, td {
     font-size: 20px;
     padding: 8px;
-    text-align: left;
+    text-align: center;
     border-bottom: 1px solid #ddd;
   }
 

@@ -138,6 +138,7 @@ export class ViewAccommodationPageComponent implements OnInit {
 
     this.reservationService.deleteAvailability(av).subscribe(data => {
         window.location.reload()
+        this.toastr.success("Successfully deleted this Availability!", "Success");
     }, err => {
       this.toastr.warning("Can't delete availability because there are reservations during this period", "Warning!")
     })
@@ -148,6 +149,7 @@ export class ViewAccommodationPageComponent implements OnInit {
 
     this.reservationService.deletePriceVariation(pv).subscribe(data => {
         window.location.reload()
+        this.toastr.success("Successfully deleted this Price Variation!", "Success");
     }, err => {
       this.toastr.warning("Can't delete price variation because there are reservations during this period", "Warning!")
     })
@@ -183,9 +185,10 @@ export class ViewAccommodationPageComponent implements OnInit {
     
     this.reservationService.cancelReservation(res).subscribe(data => {
       window.location.reload()
+      this.toastr.success("Successfully canceled your reservation!", "Success");
       
     }, err => {
-      alert("This reservation has already started!")
+      this.toastr.warning("This reservation has already started!", "Warning");
     })
   }
   

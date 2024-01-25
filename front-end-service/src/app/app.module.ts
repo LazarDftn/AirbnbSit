@@ -24,6 +24,7 @@ import { ForgotPasswordPageComponent } from './components/forgot-password-page/f
 import { SearchAccommodationPageComponent } from './components/search-accommodation-page/search-accommodation-page.component';
 import { ViewAccommodationPageComponent } from './components/view-accommodation-page/view-accommodation-page.component';
 import { EditAccommodationPageComponent } from './components/edit-accommodation-page/edit-accommodation-page.component';
+import { ProfilePageComponent } from './components/profile-page/profile-page.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +38,8 @@ import { EditAccommodationPageComponent } from './components/edit-accommodation-
     ForgotPasswordPageComponent,
     SearchAccommodationPageComponent,
     ViewAccommodationPageComponent,
-    EditAccommodationPageComponent
+    EditAccommodationPageComponent,
+    ProfilePageComponent
   ],
   imports: [
     BrowserModule,

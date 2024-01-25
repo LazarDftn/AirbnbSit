@@ -38,11 +38,17 @@ func NewReservationsHandler(l *log.Logger, r *repositories.ReservationRepo) *Res
 
 func (r *ReservationsHandler) PostReservation(c *gin.Context) {
 	var res *domain.Reservation
-	fmt.Print(res)
+
 	if err := c.ShouldBindJSON(&res); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	if (res.StartDate).Before(time.Now().Add(1)) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "The start date must be in the future!"})
+		return
+	}
+
 	err := r.repo.InsertReservation(res)
 	if err != "" {
 		r.logger.Print("Database exception: ", err)
@@ -343,6 +349,13 @@ func (r *ReservationsHandler) DeleteReservation(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&res); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	fmt.Println(res)
+
+	if (res.StartDate).Before(time.Now().Add(1)) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "This reservation has already started!"})
 		return
 	}
 

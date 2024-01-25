@@ -233,4 +233,31 @@ export class ReservationService {
           return data
         }));
       }
+
+      cancelReservation(res: Reservation){
+
+        var resDTO = {
+          accommId: res.accommodationId,
+          location: res.location,
+          guestEmail: res.guestEmail,
+          hostEmail: res.hostEmail,
+          price: res.price,
+          numOfPeople: res.numOfPeople,
+          startDate: res.startDate,
+          endDate: res.endDate
+        }
+
+        console.log(resDTO)
+        
+        const postHeaders = new HttpHeaders({
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'token': localStorage.getItem("airbnbToken") + ''
+        });
+
+        return this.apiService.post(this.config.cancel_reservation_url, resDTO, postHeaders)
+        .pipe(map((data) => {
+          return data
+        }));
+      }
     }

@@ -132,6 +132,9 @@
                             <br>
                             <b>Price:</b> ${{ res.price }}
                         </p>
+                        <button *ngIf="this.authService.userHasEmail(res.guestEmail)" (click)="cancelReservation(res)">
+                            cancel
+                        </button>
                     </div>
                     <hr>
                 </div>

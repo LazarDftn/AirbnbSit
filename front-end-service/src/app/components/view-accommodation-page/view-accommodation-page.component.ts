@@ -56,6 +56,7 @@ export class ViewAccommodationPageComponent implements OnInit {
 
       this.reservationService.getReservationsByAccommId(this.accomm.location, this.accommId + "").subscribe(data => {
         this.reservations = data
+        console.log(this.reservations)
       })
 
       this.reservationService.getAvailabilities(this.accomm.location, this.accommId + "").subscribe(data => {
@@ -174,6 +175,18 @@ export class ViewAccommodationPageComponent implements OnInit {
 
   edit(id: string){
     this.router.navigate(['accommodation/edit/' + id])
+  }
+
+  cancelReservation(res: Reservation){
+
+    res.accommodationId = this.accomm.id
+    
+    this.reservationService.cancelReservation(res).subscribe(data => {
+      window.location.reload()
+      
+    }, err => {
+      alert("This reservation has already started!")
+    })
   }
   
 }

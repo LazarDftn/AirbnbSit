@@ -162,8 +162,6 @@ export class AuthService {
         is_verified: true
       }
 
-      console.log(userDTO)
-
       return this.apiService.delete(this.config.delete_account_url, JSON.stringify(userDTO))
       .pipe(map((data) => {
         return data

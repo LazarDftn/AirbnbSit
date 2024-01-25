@@ -137,7 +137,7 @@ export class ViewAccommodationPageComponent implements OnInit {
   deleteAvailability(av: Availability){
 
     this.reservationService.deleteAvailability(av).subscribe(data => {
-        window.location.reload()
+        reloadTimeOut();
         this.toastr.success("Successfully deleted this Availability!", "Success");
     }, err => {
       this.toastr.warning("Can't delete availability because there are reservations during this period", "Warning!")
@@ -148,7 +148,7 @@ export class ViewAccommodationPageComponent implements OnInit {
   deletePriceVariation(pv: PriceVariation){
 
     this.reservationService.deletePriceVariation(pv).subscribe(data => {
-        window.location.reload()
+        reloadTimeOut();
         this.toastr.success("Successfully deleted this Price Variation!", "Success");
     }, err => {
       this.toastr.warning("Can't delete price variation because there are reservations during this period", "Warning!")
@@ -169,8 +169,8 @@ export class ViewAccommodationPageComponent implements OnInit {
       if (data.body != null){
         this.toastr.warning("Home is not available during this time", "Warning!")
       } else {
+        reloadTimeOut();
         this.toastr.success("Successfuly Booked the Accommadation!", "Success!")
-        window.location.reload()
       }
     })
   }
@@ -184,7 +184,7 @@ export class ViewAccommodationPageComponent implements OnInit {
     res.accommodationId = this.accomm.id
     
     this.reservationService.cancelReservation(res).subscribe(data => {
-      window.location.reload()
+      reloadTimeOut();
       this.toastr.success("Successfully canceled your reservation!", "Success");
       
     }, err => {
@@ -192,4 +192,11 @@ export class ViewAccommodationPageComponent implements OnInit {
     })
   }
   
+
+  
+}
+
+//reload page after 3 seconds
+function reloadTimeOut(){
+  setTimeout(() => window.location.reload(), 3000)
 }

@@ -56,5 +56,9 @@ export class CreateAccommodationPageComponent implements OnInit {
       maxCapacity: []
     });
   }
+
+  cancelBtn(){
+    this.router.navigate(['welcome-page'])
+  }
   
 }

@@ -142,11 +142,21 @@
                 <div class="priceChanges-box">
                     <h3>Price changes for this home</h3>
                     <div *ngFor="let pv of priceVariations">
-                        <br>
-                        <p><b>FROM</b> {{ pv.startDate.toString().slice(0,10) }} <b>TO</b> {{ pv.endDate.toString().slice(0,10) }}
-                            increase of {{ pv.percentage }}%</p>
-                        <div *ngIf="this.authService.userHasEmail(accomm.Owner)">
-                            <button (click)="deletePriceVariation(pv)" class="btn btn-primary w-100">Delete Price Changes</button>
+                            <table>
+                                <tr>
+                                    <th>Start date</th>
+                                    <th>End date</th>
+                                    <th>Increase</th>
+                                </tr>
+                                <tr>
+                                    <td>{{ pv.startDate.toString().slice(0,10) }}</td>
+                                    <td>{{ pv.endDate.toString().slice(0,10) }}</td>
+                                    <td>{{ pv.percentage }}%</td>
+                                </tr>
+                            </table>
+
+                        <div *ngIf="this.authService.userHasEmail(accomm.Owner)" class="row justify-content-center">
+                            <button (click)="deletePriceVariation(pv)" class="btn btn-outline-danger w-50">Delete Price Changes</button>
                         </div>
                     </div>
                 </div>

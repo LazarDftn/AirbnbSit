@@ -307,6 +307,8 @@ func Login() gin.HandlerFunc {
 		token, refreshToken, _ := helper.GenerateAllTokens(*foundProfile.Username, *foundProfile.User_type)
 		helper.UpdateAllTokens(token, refreshToken, foundProfile.ID.Hex())
 		//err = userCollection.FindOne(ctx, bson.M{"user_id": foundProfile.ID.Hex()}).Decode(&foundProfile)
+		foundProfile.Token = &token
+		foundProfile.Refresh_token = &refreshToken
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

@@ -107,6 +107,7 @@ func (ar *AccommodationRepo) Insert(accommodation *domain.Accommodation) interfa
 
 	result, err := accommCollection.InsertOne(ctx, &accommodation)
 	if err != nil {
+		fmt.Println(err)
 		ar.logger.Println(err)
 		return err
 	}

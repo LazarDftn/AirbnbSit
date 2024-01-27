@@ -36,11 +36,14 @@ func NewAccommodationsHandler(l *log.Logger, r *repositories.AccommodationRepo) 
 
 func (a *AccommodationsHandler) PostAccommodation(c *gin.Context) {
 	var accomm *domain.Accommodation
-	fmt.Print(accomm)
+
 	if err := c.ShouldBindJSON(&accomm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	fmt.Print(accomm)
+
 	res := a.repo.Insert(accomm)
 	e := json.NewEncoder(c.Writer)
 	e.Encode(res)
@@ -136,6 +139,7 @@ func (a *AccommodationsHandler) CORSMiddleware() gin.HandlerFunc {
 
 func (a *AccommodationsHandler) Authorize(role string) gin.HandlerFunc { // Check if user is authorized as Host or Guest depending on the 'role' parameter
 	return func(c *gin.Context) {
+
 		clientToken := c.Request.Header.Get("token") // get the token from the client
 		if clientToken == "" {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "You are not logged in!"})

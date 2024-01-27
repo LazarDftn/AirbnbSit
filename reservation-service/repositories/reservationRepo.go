@@ -100,7 +100,7 @@ func (rr *ReservationRepo) CreateTables() {
 	err := rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(location text, accomm_id text, reservation_id UUID, guest_email text, host_email text, price int, 
-					num_of_People int, start_date timestamp, end_date timestamp, 
+					num_of_People int, start_date timestamp, end_date timestamp, hostId text, guestId text, 
 					PRIMARY KEY ((location), accomm_id, end_date, start_date, reservation_id)) 
 					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date DESC, start_date DESC, reservation_id ASC)`,
 			"reservation_by_accommodation")).Exec()
@@ -113,9 +113,9 @@ func (rr *ReservationRepo) CreateTables() {
 	*/
 	err = rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s
-					(role text, email text, end_date timestamp, accomm_id text, location text, start_date timestamp,
-					PRIMARY KEY ((role), email, end_date, accomm_id, start_date))
-					WITH CLUSTERING ORDER BY (email ASC, end_date ASC, accomm_id ASC, start_date ASC)`,
+					(role text, ownerId text, end_date timestamp, accomm_id text, location text, start_date timestamp,
+					PRIMARY KEY ((role), ownerId, end_date, accomm_id, start_date))
+					WITH CLUSTERING ORDER BY (ownerId ASC, end_date ASC, accomm_id ASC, start_date ASC)`,
 			"reservation_by_user")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -494,19 +494,20 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 	reservation.ReservationID, _ = gocql.RandomUUID()
 	err := rr.session.Query(
 		`INSERT INTO reservation_by_accommodation (location, accomm_id, reservation_id, start_date, end_date, num_of_people,
-			guest_email, host_email, price) 
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			guest_email, host_email, price, hostId, guestId) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		reservation.Location, reservation.AccommID, reservation.ReservationID, reservation.StartDate, reservation.EndDate,
-		reservation.NumOfPeople, reservation.GuestEmail, reservation.HostEmail, reservation.Price).Exec()
+		reservation.NumOfPeople, reservation.GuestEmail, reservation.HostEmail, reservation.Price,
+		reservation.HostId, reservation.GuestId).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 		return err.Error()
 	}
 
 	err = rr.session.Query(
-		`INSERT INTO reservation_by_user (role, email, end_date, accomm_id, location, start_date) 
+		`INSERT INTO reservation_by_user (role, ownerId, end_date, accomm_id, location, start_date) 
 		VALUES (?, ?, ?, ?, ?, ?)`,
-		"GUEST", reservation.GuestEmail, reservation.EndDate, reservation.AccommID, reservation.Location,
+		"GUEST", reservation.GuestId, reservation.EndDate, reservation.AccommID, reservation.Location,
 		reservation.StartDate).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -514,9 +515,9 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 	}
 
 	err = rr.session.Query(
-		`INSERT INTO reservation_by_user (role, email, end_date, accomm_id, location, start_date) 
+		`INSERT INTO reservation_by_user (role, ownerId, end_date, accomm_id, location, start_date) 
 		VALUES (?, ?, ?, ?, ?, ?)`,
-		"HOST", reservation.HostEmail, reservation.EndDate, reservation.AccommID, reservation.Location,
+		"HOST", reservation.HostId, reservation.EndDate, reservation.AccommID, reservation.Location,
 		reservation.StartDate).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -526,11 +527,11 @@ func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) st
 	return ""
 }
 
-func (rr *ReservationRepo) GetPendingReservationsByUser(role string, email string) (bool, error) {
+func (rr *ReservationRepo) GetPendingReservationsByUser(role string, id string) (bool, error) {
 
-	scanner := rr.session.Query(`SELECT location FROM reservation_by_user WHERE role = ? AND email = ? 
+	scanner := rr.session.Query(`SELECT location FROM reservation_by_user WHERE role = ? AND ownerId = ? 
 	AND end_date >= ?`,
-		role, email, time.Now()).Iter().Scanner()
+		role, id, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
 		return true, nil
@@ -557,9 +558,9 @@ func (rr *ReservationRepo) DeleteReservation(res domain.Reservation) (string, er
 	}
 
 	err = rr.session.Query(
-		`DELETE FROM reservation_by_user WHERE role = ? AND email = ? AND end_date = ? 
+		`DELETE FROM reservation_by_user WHERE role = ? AND ownerId = ? AND end_date = ? 
 		AND accomm_id = ? AND start_date > ?`,
-		"GUEST", res.GuestEmail, res.EndDate, res.AccommID, time.Now()).Exec()
+		"GUEST", res.GuestId, res.EndDate, res.AccommID, time.Now()).Exec()
 
 	if err != nil {
 		rr.logger.Println(err)
@@ -567,9 +568,9 @@ func (rr *ReservationRepo) DeleteReservation(res domain.Reservation) (string, er
 	}
 
 	err = rr.session.Query(
-		`DELETE FROM reservation_by_user WHERE role = ? AND email = ? AND end_date = ? 
+		`DELETE FROM reservation_by_user WHERE role = ? AND ownerId = ? AND end_date = ? 
 		AND accomm_id = ? AND start_date > ?`,
-		"HOST", res.HostEmail, res.EndDate, res.AccommID, time.Now()).Exec()
+		"HOST", res.HostId, res.EndDate, res.AccommID, time.Now()).Exec()
 
 	if err != nil {
 		rr.logger.Println(err)
@@ -582,14 +583,14 @@ func (rr *ReservationRepo) DeleteReservation(res domain.Reservation) (string, er
 func (rr *ReservationRepo) GetReservationsByAccomm(location string, id string) (domain.Reservations, error) {
 
 	scanner := rr.session.Query(`SELECT location, accomm_id, reservation_id, guest_email, host_email, price, 
-	num_of_People, start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?`,
+	num_of_People, start_date, end_date, hostId, guestId FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?`,
 		location, id).Iter().Scanner()
 
 	var foundReservations domain.Reservations
 	for scanner.Next() {
 		var res domain.Reservation
 		err := scanner.Scan(&res.Location, &res.AccommID, &res.ReservationID, &res.GuestEmail, &res.HostEmail, &res.Price,
-			&res.NumOfPeople, &res.StartDate, &res.EndDate)
+			&res.NumOfPeople, &res.StartDate, &res.EndDate, &res.HostId, &res.GuestId)
 		if err != nil {
 			rr.logger.Println(err)
 			return nil, err

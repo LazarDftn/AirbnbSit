@@ -168,6 +168,7 @@ func Signup() gin.HandlerFunc {
 		profile.Last_name = user.Last_name
 		profile.Address = user.Address
 		profile.User_type = user.User_type
+		profile.ID = primitive.NewObjectID()
 
 		jsonProfile, errr := json.Marshal(&profile)
 
@@ -220,6 +221,7 @@ func Signup() gin.HandlerFunc {
 
 		var credentials models.UserCredentialsModel
 
+		credentials.ID = profile.ID
 		credentials.Email = user.Email
 		credentials.Password = user.Password
 		credentials.Is_verified = true // Change to false later
@@ -304,7 +306,7 @@ func Login() gin.HandlerFunc {
 
 		token, refreshToken, _ := helper.GenerateAllTokens(*foundProfile.Username, *foundProfile.User_type)
 		helper.UpdateAllTokens(token, refreshToken, foundProfile.ID.Hex())
-		err = userCollection.FindOne(ctx, bson.M{"user_id": foundProfile.ID.Hex()}).Decode(&foundProfile)
+		//err = userCollection.FindOne(ctx, bson.M{"user_id": foundProfile.ID.Hex()}).Decode(&foundProfile)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -320,14 +322,15 @@ func DeleteAccount() gin.HandlerFunc {
 		defer cancel()
 		var profile models.Profile
 
-		fmt.Println(profile)
-
 		if err := c.BindJSON(&profile); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		fmt.Println(profile)
+		fmt.Println(profile.Username)
+		fmt.Println(&profile.ID)
+		fmt.Println(profile.Email)
 
 		jsonProfile, err := json.Marshal(profile)
 
@@ -351,7 +354,6 @@ func DeleteAccount() gin.HandlerFunc {
 		res, errClient := http.DefaultClient.Do(req)
 
 		if errClient != nil {
-			//fmt.Println(errClient.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
 			return
 		}
@@ -360,7 +362,7 @@ func DeleteAccount() gin.HandlerFunc {
 			return
 		}
 
-		req, err = http.NewRequest(http.MethodDelete, accommAddress+*profile.Email, nil)
+		req, err = http.NewRequest(http.MethodDelete, accommAddress+profile.ID.Hex(), nil)
 		if err != nil {
 			fmt.Println(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
@@ -370,7 +372,6 @@ func DeleteAccount() gin.HandlerFunc {
 		res, errClient = http.DefaultClient.Do(req)
 
 		if errClient != nil {
-			//fmt.Println(errClient.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
 			return
 		}
@@ -379,7 +380,7 @@ func DeleteAccount() gin.HandlerFunc {
 			return
 		}
 
-		req, err = http.NewRequest(http.MethodDelete, profileAddress+*profile.Email, nil)
+		req, err = http.NewRequest(http.MethodDelete, profileAddress+profile.ID.Hex(), nil)
 		if err != nil {
 			fmt.Println(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
@@ -389,7 +390,6 @@ func DeleteAccount() gin.HandlerFunc {
 		res, errClient = http.DefaultClient.Do(req)
 
 		if errClient != nil {
-			//fmt.Println(errClient.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
 			return
 		}
@@ -398,37 +398,31 @@ func DeleteAccount() gin.HandlerFunc {
 			return
 		}
 
-		req, err = http.NewRequest(http.MethodDelete, profileAddress+*profile.Email, nil)
-		if err != nil {
-			fmt.Println(err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
-			return
-		}
+		result, errr := userCollection.DeleteOne(ctx, bson.D{{Key: "_id", Value: profile.ID}})
 
-		res, errClient = http.DefaultClient.Do(req)
-
-		if errClient != nil {
-			fmt.Println(errClient.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your profile!"})
-			return
-		}
-		if res.StatusCode != 200 {
+		if errr != nil {
 			fmt.Println(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your profile!"})
 			return
 		}
 
-		fmt.Println(profile.Email)
+		if result.DeletedCount > 0 {
+			c.JSON(http.StatusOK, gin.H{"message": "Profile deleted successfully"})
+			return
+		} else {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Profile not found"})
+			return
+		}
 
-		_, err = userCollection.DeleteOne(ctx, bson.D{{Key: "email", Value: profile.Email}})
+		/*fmt.Println(result)
 
-		if err != nil {
+		if errr != nil {
 			fmt.Println(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your profile!"})
 			return
 		}
 
-		c.JSON(http.StatusOK, "account deleted successfully!")
+		c.JSON(http.StatusOK, "account deleted successfully!")*/
 	}
 }
 

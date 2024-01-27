@@ -14,6 +14,8 @@ type Reservation struct {
 	AccommID      string     `json:"accommId"`
 	GuestEmail    string     `json:"guestEmail"`
 	HostEmail     string     `json:"hostEmail"`
+	GuestId       string     `json:"guestId"`
+	HostId        string     `json:"hostId"`
 	Price         int        `json:"price"`
 	NumOfPeople   int        `json:"numOfPeople"`
 	StartDate     time.Time  `json:"startDate"`

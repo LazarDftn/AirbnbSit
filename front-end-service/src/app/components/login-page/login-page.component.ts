@@ -36,6 +36,7 @@ export class LoginPageComponent implements OnInit {
         localStorage.setItem("airbnbEmail", user.email)
         localStorage.setItem("airbnbRole", data.body.user_type)
         localStorage.setItem("airbnbUsername", data.body.username)
+        localStorage.setItem("airbnbId", data.body.ID)
         this.router.navigate(['welcome-page'])
         this.toastr.success("Successfully loged in!", "Success");
       }, err => {

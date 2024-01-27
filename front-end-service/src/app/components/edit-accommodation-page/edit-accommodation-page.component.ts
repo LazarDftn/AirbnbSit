@@ -44,9 +44,9 @@ export class EditAccommodationPageComponent implements OnInit{
 
       this.accomm = data
       this.accomm.Owner = data.owner
-      console.log(this.accomm.Owner)
+      this.accomm.ownerId = data.ownerId
 
-      if (!this.authService.userHasEmail(this.accomm.Owner)){
+      if (!this.authService.userHasId(this.accomm.ownerId)){
         this.router.navigate(['welcome-page'])
       }
 

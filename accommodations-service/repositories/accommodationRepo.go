@@ -120,13 +120,13 @@ func (ar *AccommodationRepo) getCollection() *mongo.Collection {
 	return accommCollection
 }
 
-func (ar *AccommodationRepo) DeleteAccommodationsByHost(email string) error {
+func (ar *AccommodationRepo) DeleteAccommodationsByHost(id string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	accommCollection := ar.getCollection()
 
-	_, err := accommCollection.DeleteMany(ctx, bson.D{{Key: "owner", Value: email}})
+	_, err := accommCollection.DeleteMany(ctx, bson.D{{Key: "ownerId", Value: id}})
 
 	if err != nil {
 		return err

@@ -328,7 +328,7 @@ func (r *ReservationsHandler) GetPendingReservationsByUser(c *gin.Context) {
 		return
 	}
 
-	isPending, err := r.repo.GetPendingReservationsByUser(*user.User_type, *user.Email)
+	isPending, err := r.repo.GetPendingReservationsByUser(*user.User_type, user.ID.Hex())
 
 	if err != nil {
 		c.JSON(418, gin.H{"error": "This user has pending reservations!"})

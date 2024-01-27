@@ -81,7 +81,7 @@ func (a *AccommodationsHandler) GetAccommById(c *gin.Context) {
 
 func (a *AccommodationsHandler) DeleteAccommodationsByHost(c *gin.Context) {
 
-	user := c.Param("user")
+	user := c.Param("id")
 
 	err := a.repo.DeleteAccommodationsByHost(user)
 

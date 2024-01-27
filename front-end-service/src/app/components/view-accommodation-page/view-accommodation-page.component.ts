@@ -49,6 +49,7 @@ export class ViewAccommodationPageComponent implements OnInit {
       this.accomm.location = data.location
       this.accomm.benefits = data.benefits
       this.accomm.Owner = data.owner
+      this.accomm.ownerId = data.ownerId
       this.accomm.id = data.id
       this.accomm.minCapacity = data.minCapacity
       this.accomm.maxCapacity = data.maxCapacity
@@ -157,6 +158,8 @@ export class ViewAccommodationPageComponent implements OnInit {
 
   makeReservation(){
     
+    this.reservation.guestId = localStorage.getItem("airbnbId")!
+    this.reservation.hostId = this.accomm.ownerId
     this.reservation.guestEmail = localStorage.getItem("airbnbEmail")!
     this.reservation.hostEmail = this.accomm.Owner
     this.reservation.accommodationId = this.accomm.id

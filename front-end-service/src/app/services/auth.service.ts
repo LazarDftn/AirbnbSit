@@ -112,6 +112,7 @@ export class AuthService {
     }
     
     logout(){
+      localStorage.removeItem("airbnbId")
       localStorage.removeItem("airbnbToken")
       localStorage.removeItem("airbnbEmail")
       localStorage.removeItem("airbnbRole")
@@ -140,9 +141,9 @@ export class AuthService {
     }
 
     //Check if the logged in user is the one who wants to edit his data (profile, accommodation, etc.)
-    userHasEmail(email: string): boolean {
-      var reqEmail = localStorage.getItem("airbnbEmail")
-      if (reqEmail == email){
+    userHasId(id: string): boolean {
+      var reqId = localStorage.getItem("airbnbId")
+      if (reqId == id){
         return true
       }
       return false
@@ -151,6 +152,7 @@ export class AuthService {
     deleteAccount() {
 
       var userDTO = {
+        id: localStorage.getItem("airbnbId"),
         first_name: "",
         last_name: "",
         username: localStorage.getItem("airbnbUsername"),

@@ -9,7 +9,8 @@ import (
 
 type Accommodation struct {
 	Id          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Owner       string             `bson:"owner" json:"owner"` //change type string to User
+	Owner       string             `bson:"owner" json:"owner"`
+	OwnerId     string             `bson:"ownerId" json:"ownerId"`
 	Name        string             `bson:"name" json:"name"`
 	Location    string             `bson:"location" json:"location"`
 	Benefits    string             `bson:"benefits" json:"benefits"`

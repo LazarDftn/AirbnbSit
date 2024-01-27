@@ -36,7 +36,7 @@
 
                     <i class="fas fa-envelope" style="font-size: 20px;"></i>Host Contact E-mail
                     <p>{{accomm.Owner}} </p>
-                    <button *ngIf="this.authService.userHasEmail(this.accomm.Owner)" class="btn btn-primary w-100"
+                    <button *ngIf="this.authService.userHasId(this.accomm.ownerId)" class="btn btn-primary w-100"
                         (click)="edit(this.accomm.id)">
                         Edit
                     </button>
@@ -44,7 +44,7 @@
                 </div>
 
 
-                <div class="priceBox" *ngIf="price == 0 && this.authService.userHasEmail(this.accomm.Owner)">
+                <div class="priceBox" *ngIf="price == 0 && this.authService.userHasId(this.accomm.ownerId)">
                     <h3>Add Price</h3>
                     <div class="form-group">
                         <label for="price">Price:</label>
@@ -93,7 +93,7 @@
                         Book
                     </button>
                 </div>
-                <!-- <div *ngIf="accomm.price > 0 && this.authService.userHasEmail(accomm.Owner)">
+                <!-- <div *ngIf="accomm.price > 0 && this.authService.userHasId(accomm.ownerId)">
                             Implement daterange inputs for accommodation unavailability and price changes here
                             (or in another component, I don't know)
                     </div> -->
@@ -113,7 +113,7 @@
                                 <td>{{ av.endDate.toString().slice(0,10) }}</td>
                             </tr>
                         </table>
-                        <div *ngIf="this.authService.userHasEmail(accomm.Owner)" class="row justify-content-center">
+                        <div *ngIf="this.authService.userHasId(accomm.ownerId)" class="row justify-content-center">
                             <button (click)="deleteAvailability(av)" class="btn btn-outline-danger w-50" style="margin-bottom: 10px;">Delete Availability</button>
                         </div>
                     </div>
@@ -125,14 +125,14 @@
                     <div *ngFor="let res of reservations" class="singleReservationBox">
                         <p id="reservationId"><b>FROM</b> {{ res.startDate.toString().slice(0,10) }} <b>TO</b> {{ res.endDate.toString().slice(0,10) }}</p>
                         <p
-                            *ngIf="this.authService.userHasEmail(accomm.Owner) || this.authService.userHasEmail(res.guestEmail)">
+                            *ngIf="this.authService.userHasId(accomm.ownerId) || this.authService.userHasId(res.guestId)">
                             <b>Reservation User:</b> {{ res.guestEmail }}
                             <br>
                             <b>For:</b> {{ res.numOfPeople }} people
                             <br>
                             <b>Price:</b> ${{ res.price }}
                         </p>
-                        <button class="btn btn-danger" id="btnCnclRes" *ngIf="this.authService.userHasEmail(res.guestEmail)" (click)="cancelReservation(res)">
+                        <button class="btn btn-danger" id="btnCnclRes" *ngIf="this.authService.userHasId(res.guestId)" (click)="cancelReservation(res)">
                             Cancel your Reservation
                         </button>
                     </div>
@@ -155,7 +155,7 @@
                                 </tr>
                             </table>
 
-                        <div *ngIf="this.authService.userHasEmail(accomm.Owner)" class="row justify-content-center">
+                        <div *ngIf="this.authService.userHasId(accomm.ownerId)" class="row justify-content-center">
                             <button (click)="deletePriceVariation(pv)" class="btn btn-outline-danger w-50">Delete Price Changes</button>
                         </div>
                     </div>

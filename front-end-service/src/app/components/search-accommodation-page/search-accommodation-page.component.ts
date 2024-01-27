@@ -57,7 +57,7 @@ export class SearchAccommodationPageComponent implements OnInit {
     })
   }
 
-    /*
+
 
   // add this method to Profile page
 
@@ -72,6 +72,6 @@ export class SearchAccommodationPageComponent implements OnInit {
 
   }
 
-  */
+
 
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ProfileHandler struct {
@@ -101,9 +102,17 @@ func (p *ProfileHandler) GetProfile(c *gin.Context) {
 
 func (p *ProfileHandler) DeleteProfile(c *gin.Context) {
 
-	email := c.Param("email")
+	id := c.Param("id")
 
-	err := p.repo.Delete(email)
+	objectId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, "")
+		return
+	}
+
+	err = p.repo.Delete(objectId)
 
 	if err != nil {
 		fmt.Println(err.Error())

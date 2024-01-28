@@ -100,7 +100,7 @@ func (pr *ProfileRepo) GetAll() (domain.Users, error) {
 	return profiles, nil
 }
 
-func (pr *ProfileRepo) GetProfile(email string) (*domain.User, error) {
+func (pr *ProfileRepo) GetProfile(id string) (*domain.User, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -109,7 +109,9 @@ func (pr *ProfileRepo) GetProfile(email string) (*domain.User, error) {
 
 	var profile domain.User
 
-	err := profileCollection.FindOne(ctx, bson.M{"email": email}).Decode(&profile)
+	convertedId, _ := primitive.ObjectIDFromHex(id)
+
+	err := profileCollection.FindOne(ctx, bson.M{"_id": convertedId}).Decode(&profile)
 	if err != nil {
 		pr.logger.Println(err)
 		return &profile, err

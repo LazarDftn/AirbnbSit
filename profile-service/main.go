@@ -43,7 +43,7 @@ func main() {
 	router := gin.New()
 	//router.Use(profileHandler.CORSMiddleware())
 	router.GET("/profiles", profileHandler.GetAllProfiles)
-	router.GET("/:email", profileHandler.GetProfile)
+	router.GET("/:id", profileHandler.GetProfile)
 	router.POST("/create", profileHandler.Signup)
 	router.DELETE("/:id", profileHandler.DeleteProfile)
 

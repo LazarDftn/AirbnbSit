@@ -82,9 +82,9 @@ func (p *ProfileHandler) GetAllProfiles(c *gin.Context) {
 
 func (p *ProfileHandler) GetProfile(c *gin.Context) {
 
-	email := c.Param("email")
+	id := c.Param("id")
 
-	profile, err := p.repo.GetProfile(email)
+	profile, err := p.repo.GetProfile(id)
 
 	if profile == nil {
 		c.JSON(http.StatusBadRequest, err.Error())

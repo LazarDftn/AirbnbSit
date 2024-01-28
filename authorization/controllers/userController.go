@@ -275,13 +275,10 @@ func Login() gin.HandlerFunc {
 		if foundUser.Email == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
 		}
-		email := userLogin.Email
-
-		emailStr := *email
 
 		SetAddress()
 
-		req, err := http.NewRequest(http.MethodGet, profileAddress+emailStr, nil)
+		req, err := http.NewRequest(http.MethodGet, profileAddress+foundUser.ID.Hex(), nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
 			return

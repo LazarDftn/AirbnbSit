@@ -100,8 +100,9 @@
             </div>
 
             <div class="kolona2">
+                <h3>Availability for this home</h3>
+
                 <div class="availability-box">
-                    <h3>Availability for this home</h3>
                     <div *ngFor="let av of availabilities">
                         <table>
                             <tr>
@@ -120,8 +121,8 @@
                     <hr>
                 </div>
                 
+                <h3>Reservations Dates for this home</h3>
                 <div class="reservations-box">
-                    <h3>Reservations Dates for this home</h3>
                     <div *ngFor="let res of reservations" class="singleReservationBox">
                         <p id="reservationId"><b>FROM</b> {{ res.startDate.toString().slice(0,10) }} <b>TO</b> {{ res.endDate.toString().slice(0,10) }}</p>
                         <p
@@ -139,8 +140,8 @@
                     <hr>
                 </div>
 
+                <h3>Price changes for this home</h3>
                 <div class="priceChanges-box">
-                    <h3>Price changes for this home</h3>
                     <div *ngFor="let pv of priceVariations">
                             <table>
                                 <tr>

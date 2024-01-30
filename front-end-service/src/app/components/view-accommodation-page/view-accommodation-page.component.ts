@@ -80,7 +80,9 @@ export class ViewAccommodationPageComponent implements OnInit {
 
   addPrice(){
     this.reservationService.createPrice(this.accomm.price, this.accomm.payPer, this.accomm.id).subscribe
-    (data => {window.location.reload()})
+    (data => {reloadTimeOut();
+      this.toastr.success("Successfully added price!", "Success!")
+    })
   }
 
   // before Guest makes the reservation, check service for any price variations for given period and calculate 

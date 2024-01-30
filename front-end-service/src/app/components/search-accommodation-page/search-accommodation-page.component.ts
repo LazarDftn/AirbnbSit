@@ -59,19 +59,4 @@ export class SearchAccommodationPageComponent implements OnInit {
 
 
 
-  // add this method to Profile page
-
-  deleteAccount(){
-
-    this.authService.deleteAccount().subscribe(data => {
-      console.log(data)
-    }, err => {
-      alert(err.error.error)
-    })
-
-
-  }
-
-
-
 }

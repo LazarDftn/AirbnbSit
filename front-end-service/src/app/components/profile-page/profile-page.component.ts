@@ -1,5 +1,8 @@
 import { Component } from '@angular/core';
+import { User } from 'src/app/model/user';
+import { UserProfile } from 'src/app/model/userProfile';
 import { AuthService } from 'src/app/services/auth.service';
+
 
 @Component({
   selector: 'app-profile-page',
@@ -16,4 +19,17 @@ export class ProfilePageComponent {
   isUserGuest = this.authService.userHasRole("GUEST")
 
   username = localStorage.getItem("airbnbUsername")
+  email = localStorage.getItem("airbnbEmail");
+
+
+  
+  deleteAccount(){
+
+    this.authService.deleteAccount().subscribe(data => {
+      console.log(data)
+    }, err => {
+      alert(err.error.error)
+    })
+  }
+
 }

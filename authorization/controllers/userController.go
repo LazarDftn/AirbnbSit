@@ -450,22 +450,22 @@ func EditAccount(c *gin.Context) {
 		return
 	}
 
-	if user.Email != "" {
-
-		foundEmail := userCollection.FindOne(c, bson.M{"email": user.Email})
-
-		if foundEmail != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "User with this email already exists!"})
-			return
-		}
-	}
-
-	if user.NewPassword != "" {
+	if user.NewPassword != "" || user.Email != "" {
 
 		passwordIsValid, _ := VerifyPassword(user.NewPassword, *foundUser.Password)
 		if !passwordIsValid {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Old password is incorrect!"})
 			return
+		}
+
+		if user.Email != "" {
+
+			foundEmail := userCollection.FindOne(c, bson.M{"email": user.Email})
+
+			if foundEmail != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "User with this email already exists!"})
+				return
+			}
 		}
 	}
 

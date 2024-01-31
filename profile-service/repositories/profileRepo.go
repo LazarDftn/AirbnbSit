@@ -132,6 +132,30 @@ func (pr *ProfileRepo) Insert(user domain.User) (interface{}, error) {
 
 }
 
+func (pr *ProfileRepo) EditProfile(user domain.User, id primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	profileCollection := pr.getCollection()
+
+	if user.Username != nil {
+		profileCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{
+			"$set": bson.M{
+				"username": user.Username,
+			}})
+	}
+
+	profileCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{
+		"$set": bson.M{
+			"email":      user.Email,
+			"address":    user.Address,
+			"first_name": user.First_name,
+			"last_name":  user.Last_name,
+		}})
+
+	return nil
+}
+
 func (pr *ProfileRepo) CheckUsernameExists(username string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

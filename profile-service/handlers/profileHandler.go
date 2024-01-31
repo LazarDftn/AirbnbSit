@@ -123,6 +123,41 @@ func (p *ProfileHandler) DeleteProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, "")
 }
 
+func (p *ProfileHandler) EditProfile(c *gin.Context) {
+
+	id := c.Param("id")
+
+	objectId, err := primitive.ObjectIDFromHex(id)
+
+	var profile domain.User
+
+	if err := c.BindJSON(&profile); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, "")
+		return
+	}
+
+	if p.repo.CheckUsernameExists(*profile.Username) != "" {
+		c.JSON(428, "This username already exists")
+		return
+	}
+
+	err = p.repo.EditProfile(profile, objectId)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, "")
+		return
+	}
+
+	c.JSON(http.StatusOK, "")
+}
+
 func (p *ProfileHandler) CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")

@@ -425,6 +425,122 @@ func DeleteAccount() gin.HandlerFunc {
 	}
 }
 
+func EditAccount(c *gin.Context) {
+
+	id := c.Param("id")
+
+	var user models.UserEdit
+	var foundUser models.UserCredentialsModel
+
+	objectId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := c.BindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = userCollection.FindOne(c, bson.M{"_id": objectId}).Decode(foundUser)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
+		return
+	}
+
+	if user.Email != "" {
+
+		foundEmail := userCollection.FindOne(c, bson.M{"email": user.Email})
+
+		if foundEmail != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "User with this email already exists!"})
+			return
+		}
+	}
+
+	if user.NewPassword != "" {
+
+		passwordIsValid, _ := VerifyPassword(user.NewPassword, *foundUser.Password)
+		if !passwordIsValid {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Old password is incorrect!"})
+			return
+		}
+	}
+
+	var userToEdit models.Profile
+	userToEdit.Address = &user.Address
+	userToEdit.First_name = &user.First_name
+	userToEdit.Last_name = &user.Last_name
+	userToEdit.Username = &user.Username
+	userToEdit.Email = &user.Email
+
+	jsonProfile, errr := json.Marshal(userToEdit)
+
+	if errr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": errr.Error()})
+		return
+	}
+
+	requestBody := bytes.NewReader(jsonProfile)
+
+	req, err := http.NewRequest(http.MethodPut, profileAddress+id, requestBody)
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
+		return
+	}
+
+	res, errClient := http.DefaultClient.Do(req)
+
+	if errClient != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
+		return
+	}
+	if res.StatusCode == 418 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Your new username already exists!"})
+		return
+	}
+	if res.StatusCode != 200 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while editing your profile!"})
+		return
+	}
+
+	if user.NewPassword != "" {
+
+		newPassword := HashPassword(user.NewPassword)
+
+		user.NewPassword = newPassword
+
+		userCollection.UpdateOne(c, bson.M{"_id": objectId}, bson.M{
+			"$set": bson.M{
+				"password": user.NewPassword,
+			}})
+
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, "")
+			return
+		}
+	}
+
+	if user.Email != "" {
+		userCollection.UpdateOne(c, bson.M{"_id": objectId}, bson.M{
+			"$set": bson.M{
+				"email": user.Email,
+			}})
+
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, "")
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, "Profile edited successfully!")
+}
+
 func GetUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := helper.CheckUserType(c, "ADMIN"); err != nil {

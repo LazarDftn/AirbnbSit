@@ -181,8 +181,8 @@ export class AuthService {
     editProfile(user: User, newPassword: string){
 
       var userDTO = {
-        firstname: user.firstName,
-        lastName: user.lastName,
+        first_name: user.firstName,
+        last_name: user.lastName,
         username: user.username,
         oldPassword: user.password,
         newPassword: newPassword,

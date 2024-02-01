@@ -434,9 +434,6 @@ func EditAccount(c *gin.Context) {
 
 	objectId, err := primitive.ObjectIDFromHex(id)
 
-	fmt.Println(id)
-	fmt.Println(objectId)
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -453,9 +450,6 @@ func EditAccount(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(user.OldPassword)
-	fmt.Println(*foundUser.Password)
-
 	if user.NewPassword != "" || user.Email != "" {
 
 		passwordIsValid, _ := VerifyPassword(user.OldPassword, *foundUser.Password)
@@ -466,9 +460,14 @@ func EditAccount(c *gin.Context) {
 
 		if user.Email != "" {
 
-			foundEmail := userCollection.FindOne(c, bson.M{"email": user.Email})
+			foundEmail, err := userCollection.CountDocuments(c, bson.M{"email": user.Email})
 
-			if foundEmail != nil {
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			if foundEmail > 0 {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "User with this email already exists!"})
 				return
 			}
@@ -480,11 +479,7 @@ func EditAccount(c *gin.Context) {
 	userToEdit.First_name = &user.First_name
 	userToEdit.Last_name = &user.Last_name
 	userToEdit.Username = &user.Username
-	if user.Email == "" {
-		user.Email = *foundUser.Email
-	} else {
-		userToEdit.Email = &user.Email
-	}
+	userToEdit.Email = &user.Email
 
 	jsonProfile, errr := json.Marshal(userToEdit)
 
@@ -521,13 +516,11 @@ func EditAccount(c *gin.Context) {
 
 	if user.NewPassword != "" {
 
-		newPassword := HashPassword(user.NewPassword)
-
-		user.NewPassword = newPassword
+		newHashedPassword := HashPassword(user.NewPassword)
 
 		userCollection.UpdateOne(c, bson.M{"_id": objectId}, bson.M{
 			"$set": bson.M{
-				"password": user.NewPassword,
+				"password": newHashedPassword,
 			}})
 
 		if err != nil {

@@ -54,6 +54,11 @@ export class ProfilePageComponent implements OnInit{
 
     this.userToEdit.ID = this.user.ID
 
+    if (this.user.address == "" || this.user.firstName == "" || this.user.lastName == ""){
+      this.toastr.warning("Fields can't be empty!", "Warning")
+      return
+    }
+
     if (this.user.email != this.email){
       if (this.user.email == ""){
         this.toastr.warning("Please enter a valid mail!", "Warning")
@@ -64,6 +69,7 @@ export class ProfilePageComponent implements OnInit{
         this.toastr.warning("Enter your current password!", "Warning")
         return
       }
+      this.userToEdit.password = this.oldPassword
     } else {
       this.userToEdit.email = ""
     }
@@ -107,12 +113,18 @@ export class ProfilePageComponent implements OnInit{
     }
 
     this.authService.editProfile(this.userToEdit, this.password).subscribe(data => {
-      this.toastr.success("profile edited", "Success")
-      localStorage.setItem("airbnbUsername", this.userToEdit.username)
-      localStorage.setItem("airbnbEmail", this.userToEdit.email)
+      if (this.userToEdit.username != ""){
+        localStorage.setItem("airbnbUsername", this.userToEdit.username)
+      }
+      if (this.userToEdit.email != ""){
+        localStorage.setItem("airbnbEmail", this.userToEdit.email)
+      }
+      this.userToEdit = new User()
       window.location.reload()
+      this.toastr.success("profile edited", "Success")
     }, err => {
       this.toastr.error(err.error.error, "Error")
+      this.userToEdit = new User()
     })
 
   }

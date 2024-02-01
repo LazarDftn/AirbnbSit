@@ -139,22 +139,41 @@ func (pr *ProfileRepo) EditProfile(user domain.User, id primitive.ObjectID) erro
 	profileCollection := pr.getCollection()
 
 	if len(*user.Username) > 0 {
-		profileCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{
-			"$set": bson.M{
-				"username":   user.Username,
-				"email":      user.Email,
-				"address":    user.Address,
-				"first_name": user.First_name,
-				"last_name":  user.Last_name,
-			}})
+		if len(*user.Email) > 0 {
+			profileCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{
+				"$set": bson.M{
+					"username":   user.Username,
+					"email":      user.Email,
+					"address":    user.Address,
+					"first_name": user.First_name,
+					"last_name":  user.Last_name,
+				}})
+		} else {
+			profileCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{
+				"$set": bson.M{
+					"username":   user.Username,
+					"address":    user.Address,
+					"first_name": user.First_name,
+					"last_name":  user.Last_name,
+				}})
+		}
 	} else {
-		profileCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{
-			"$set": bson.M{
-				"email":      user.Email,
-				"address":    user.Address,
-				"first_name": user.First_name,
-				"last_name":  user.Last_name,
-			}})
+		if len(*user.Email) > 0 {
+			profileCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{
+				"$set": bson.M{
+					"email":      user.Email,
+					"address":    user.Address,
+					"first_name": user.First_name,
+					"last_name":  user.Last_name,
+				}})
+		} else {
+			profileCollection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{
+				"$set": bson.M{
+					"address":    user.Address,
+					"first_name": user.First_name,
+					"last_name":  user.Last_name,
+				}})
+		}
 	}
 
 	return nil

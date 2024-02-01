@@ -412,16 +412,6 @@ func DeleteAccount() gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Profile not found"})
 			return
 		}
-
-		/*fmt.Println(result)
-
-		if errr != nil {
-			fmt.Println(err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your profile!"})
-			return
-		}
-
-		c.JSON(http.StatusOK, "account deleted successfully!")*/
 	}
 }
 

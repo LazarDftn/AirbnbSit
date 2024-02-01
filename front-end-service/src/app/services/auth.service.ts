@@ -23,8 +23,8 @@ export class AuthService {
     signup(user: User){
 
       var userDTO = {
-        first_name: user.fName,
-        last_name: user.lName,
+        first_name: user.firstName,
+        last_name: user.lastName,
         username: user.username,
         password: user.password,
         email: user.email,
@@ -167,6 +167,33 @@ export class AuthService {
       return this.apiService.delete(this.config.delete_account_url, JSON.stringify(userDTO))
       .pipe(map((data) => {
         return data
+      }));
+    }
+
+    getProfile(id: string){
+
+      return this.apiService.get(this.config.profile_url + id)
+      .pipe(map((data) => {
+        return data
+      }));
+    }
+
+    editProfile(user: User, newPassword: string){
+
+      var userDTO = {
+        firstname: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        oldPassword: user.password,
+        newPassword: newPassword,
+        email: user.email,
+        address: user.address
+      }
+
+      console.log(userDTO)
+
+      return this.apiService.put(this.config.edit_profile_url + user.ID, JSON.stringify(userDTO))
+      .pipe(map(() => {
       }));
     }
   }

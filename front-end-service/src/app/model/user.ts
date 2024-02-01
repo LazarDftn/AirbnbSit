@@ -1,6 +1,7 @@
 export class User{
-    fName: string;
-    lName: string;
+    ID: string;
+    firstName: string;
+    lastName: string;
     username: string;
     password: string;
     email: string;
@@ -10,8 +11,9 @@ export class User{
     token: string
     refreshToken: string
     constructor(){
-        this.fName = ""
-        this.lName = ""
+        this.ID = ""
+        this.firstName = ""
+        this.lastName = ""
         this.username = ""
         this.password = ""
         this.email = ""

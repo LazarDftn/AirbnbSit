@@ -41,7 +41,7 @@ func main() {
 	profileHandler := handlers.NewProfileHandler(logger, store)
 
 	router := gin.New()
-	//router.Use(profileHandler.CORSMiddleware())
+	router.Use(profileHandler.CORSMiddleware())
 	router.GET("/profiles", profileHandler.GetAllProfiles)
 	router.GET("/:id", profileHandler.GetProfile)
 	router.POST("/create", profileHandler.Signup)

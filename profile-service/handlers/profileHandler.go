@@ -143,7 +143,7 @@ func (p *ProfileHandler) EditProfile(c *gin.Context) {
 	}
 
 	if p.repo.CheckUsernameExists(*profile.Username) != "" {
-		c.JSON(428, "This username already exists")
+		c.JSON(418, "This username already exists")
 		return
 	}
 

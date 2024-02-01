@@ -434,6 +434,9 @@ func EditAccount(c *gin.Context) {
 
 	objectId, err := primitive.ObjectIDFromHex(id)
 
+	fmt.Println(id)
+	fmt.Println(objectId)
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -444,15 +447,18 @@ func EditAccount(c *gin.Context) {
 		return
 	}
 
-	err = userCollection.FindOne(c, bson.M{"_id": objectId}).Decode(foundUser)
+	err = userCollection.FindOne(c, bson.M{"_id": objectId}).Decode(&foundUser)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	fmt.Println(user.OldPassword)
+	fmt.Println(*foundUser.Password)
+
 	if user.NewPassword != "" || user.Email != "" {
 
-		passwordIsValid, _ := VerifyPassword(user.NewPassword, *foundUser.Password)
+		passwordIsValid, _ := VerifyPassword(user.OldPassword, *foundUser.Password)
 		if !passwordIsValid {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Old password is incorrect!"})
 			return
@@ -474,7 +480,11 @@ func EditAccount(c *gin.Context) {
 	userToEdit.First_name = &user.First_name
 	userToEdit.Last_name = &user.Last_name
 	userToEdit.Username = &user.Username
-	userToEdit.Email = &user.Email
+	if user.Email == "" {
+		user.Email = *foundUser.Email
+	} else {
+		userToEdit.Email = &user.Email
+	}
 
 	jsonProfile, errr := json.Marshal(userToEdit)
 
@@ -485,17 +495,19 @@ func EditAccount(c *gin.Context) {
 
 	requestBody := bytes.NewReader(jsonProfile)
 
+	SetAddress()
+
 	req, err := http.NewRequest(http.MethodPut, profileAddress+id, requestBody)
 	if err != nil {
 		fmt.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
 		return
 	}
 
 	res, errClient := http.DefaultClient.Do(req)
 
 	if errClient != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errClient.Error()})
 		return
 	}
 	if res.StatusCode == 418 {

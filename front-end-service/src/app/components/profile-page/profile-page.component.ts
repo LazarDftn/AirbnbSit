@@ -10,10 +10,10 @@ import { AuthService } from 'src/app/services/auth.service';
   templateUrl: './profile-page.component.html',
   styleUrls: ['./profile-page.component.css']
 })
-export class ProfilePageComponent implements OnInit{
-  
+export class ProfilePageComponent implements OnInit {
+
   constructor(private authService: AuthService,
-    private toastr: ToastrService,){}
+    private toastr: ToastrService,) { }
 
   // booleans for the navbar to check the users role and restrict access to pages
   isUserLoggedIn = this.authService.userIsLoggedIn()
@@ -31,7 +31,7 @@ export class ProfilePageComponent implements OnInit{
   userToEdit: User = new User()
 
   ngOnInit(): void {
-    
+
     this.authService.getProfile(localStorage.getItem("airbnbId")!).subscribe(data => {
       this.user = data
       this.user.firstName = data.first_name
@@ -41,34 +41,34 @@ export class ProfilePageComponent implements OnInit{
     })
   }
 
-  deleteAccount(){
+  deleteAccount() {
 
-    if (confirm("Are you sure you want to delete your account?") == true){
+    if (confirm("Are you sure you want to delete your account?") == true) {
 
-    this.authService.deleteAccount().subscribe(data => {
-      this.authService.logout()
-    }, err => {
-      this.toastr.warning("You have pending reservations", "Warning")
-    })
+      this.authService.deleteAccount().subscribe(data => {
+        this.authService.logout()
+      }, err => {
+        this.toastr.warning("You have pending reservations", "Warning")
+      })
+    }
   }
-  }
 
-  editProfile(){
+  editProfile() {
 
     this.userToEdit.ID = this.user.ID
 
-    if (this.user.address == "" || this.user.firstName == "" || this.user.lastName == ""){
+    if (this.user.address == "" || this.user.firstName == "" || this.user.lastName == "") {
       this.toastr.warning("Fields can't be empty!", "Warning")
       return
     }
 
-    if (this.user.email != this.email){
-      if (this.user.email == ""){
+    if (this.user.email != this.email) {
+      if (this.user.email == "") {
         this.toastr.warning("Please enter a valid mail!", "Warning")
         return
       }
       this.userToEdit.email = this.user.email
-      if (this.oldPassword == ""){
+      if (this.oldPassword == "") {
         this.toastr.warning("Enter your current password!", "Warning")
         return
       }
@@ -77,8 +77,8 @@ export class ProfilePageComponent implements OnInit{
       this.userToEdit.email = ""
     }
 
-    if (this.user.username != this.username){
-      if (this.user.username == ""){
+    if (this.user.username != this.username) {
+      if (this.user.username == "") {
         this.toastr.warning("Please enter a valid username!", "Warning")
         return
       }
@@ -91,35 +91,35 @@ export class ProfilePageComponent implements OnInit{
     this.userToEdit.lastName = this.user.lastName
     this.userToEdit.address = this.user.address
 
-    if (this.password != ""){
-      
-      if (this.password != this.repeatPassword){
+    if (this.password != "") {
+
+      if (this.password != this.repeatPassword) {
         this.toastr.warning("Passwords don't match!", "Warning")
         return
       }
 
-      if (this.oldPassword == ""){
+      if (this.oldPassword == "") {
         this.toastr.warning("Enter old password!", "Warning")
         return
       }
 
-      if (!this.validatePassword(this.password)){
+      if (!this.validatePassword(this.password)) {
         this.toastr.warning("Please enter a valid new password!", "Warning")
         return
       }
       this.userToEdit.password = this.oldPassword
     } else {
-      if (this.repeatPassword != ""){
+      if (this.repeatPassword != "") {
         this.toastr.warning("Passwords don't match!", "Warning")
         return
       }
     }
 
     this.authService.editProfile(this.userToEdit, this.password).subscribe(data => {
-      if (this.userToEdit.username != ""){
+      if (this.userToEdit.username != "") {
         localStorage.setItem("airbnbUsername", this.userToEdit.username)
       }
-      if (this.userToEdit.email != ""){
+      if (this.userToEdit.email != "") {
         localStorage.setItem("airbnbEmail", this.userToEdit.email)
       }
       this.userToEdit = new User()

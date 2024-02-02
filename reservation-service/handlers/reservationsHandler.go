@@ -114,6 +114,7 @@ func (rr *ReservationsHandler) GetPriceByAccommodation(c *gin.Context) {
 
 }
 
+//checking the price for selected dates in some period of time
 func (rr *ReservationsHandler) CheckPrice(c *gin.Context) {
 
 	var res domain.Reservation
@@ -212,6 +213,7 @@ func (rr *ReservationsHandler) SearchAccommodations(c *gin.Context) {
 	e.Encode(availabilites)
 }
 
+//comparing price in the increased period of time and others dates and calculating it
 func CompareAndCalculate(vr []domain.PriceVariation, res domain.Reservation) (float64, []int) {
 
 	var finalPrice = 0.0

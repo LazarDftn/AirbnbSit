@@ -97,8 +97,6 @@ func Signup() gin.HandlerFunc {
 
 		file, err := os.Open("blacklist.txt")
 
-		// Error finding the blacklist.txt file no matter what path we try to use
-
 		if err != nil {
 			log.Panic(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error"})
@@ -149,16 +147,14 @@ func Signup() gin.HandlerFunc {
 		user.Token = &token
 		user.Refresh_token = &refreshToken
 
-		/*
-			user.Is_verified = false
-			var code = utils.GenerateRandomString(8)
-			var userVerif models.UserVerifModel
-			userVerif.VerifUsername = user.Username
-			userVerif.Code = &code
+		user.Is_verified = false
+		var code = utils.GenerateRandomString(8)
+		var userVerif models.UserVerifModel
+		userVerif.VerifUsername = user.Username
+		userVerif.Code = &code
 
-			emailVerifCollection.InsertOne(ctx, userVerif)
-			helper.SendVerifEmail(user, code)
-		*/
+		emailVerifCollection.InsertOne(ctx, userVerif)
+		helper.SendVerifEmail(user, code)
 
 		var profile models.Profile
 
@@ -177,8 +173,6 @@ func Signup() gin.HandlerFunc {
 		}
 
 		SetAddress()
-
-		fmt.Println(profileAddress)
 
 		requestBody := bytes.NewReader(jsonProfile)
 

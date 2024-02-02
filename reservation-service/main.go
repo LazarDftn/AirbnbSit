@@ -57,7 +57,7 @@ func main() {
 	rg2.POST("/accommodation-price/", reservationHandler.PostPrice)
 	rg2.POST("/accommodation/price-variation/", reservationHandler.CreatePriceVariation)
 	rg2.POST("/accommodation/price-variation/delete", reservationHandler.DeletePriceVariation)
-	rg2.POST("/availability/create", reservationHandler.CreateAvailability)
+	rg2.POST("/availability/create/:id", reservationHandler.CreateAvailability)
 	rg2.POST("/availability/delete", reservationHandler.DeleteAvailability)
 
 	rg3.POST("/", reservationHandler.PostReservation)

@@ -247,6 +247,8 @@ func GetNumberOfDays(startDate time.Time, endDate time.Time) float64 {
 
 func (r *ReservationsHandler) CreateAvailability(c *gin.Context) {
 
+	id := c.Param("id")
+
 	var av domain.Availability
 
 	if err := c.ShouldBindJSON(&av); err != nil {
@@ -254,7 +256,7 @@ func (r *ReservationsHandler) CreateAvailability(c *gin.Context) {
 		return
 	}
 
-	message, err := r.repo.InsertAvailability(&av)
+	message, err := r.repo.InsertAvailability(&av, id)
 	if err != nil {
 		r.logger.Print("Database exception: ", err)
 		e := json.NewEncoder(c.Writer)
@@ -278,6 +280,7 @@ func (r *ReservationsHandler) DeleteAvailability(c *gin.Context) {
 		c.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	c.JSON(http.StatusOK, nil)
 }
 
@@ -339,6 +342,10 @@ func (r *ReservationsHandler) GetPendingReservationsByUser(c *gin.Context) {
 		c.JSON(418, gin.H{"error": "This user has pending reservations!"})
 		return
 	}
+
+	res := r.repo.DeleteAvsByHost(user.ID.Hex())
+
+	fmt.Println(res)
 
 	c.JSON(http.StatusOK, "")
 }

@@ -147,15 +147,6 @@ func Signup() gin.HandlerFunc {
 		user.Token = &token
 		user.Refresh_token = &refreshToken
 
-		user.Is_verified = false
-		var code = utils.GenerateRandomString(8)
-		var userVerif models.UserVerifModel
-		userVerif.VerifUsername = user.Username
-		userVerif.Code = &code
-
-		emailVerifCollection.InsertOne(ctx, userVerif)
-		helper.SendVerifEmail(user, code)
-
 		var profile models.Profile
 
 		profile.Username = user.Username
@@ -218,7 +209,7 @@ func Signup() gin.HandlerFunc {
 		credentials.ID = profile.ID
 		credentials.Email = user.Email
 		credentials.Password = user.Password
-		credentials.Is_verified = true // Change to false later
+		credentials.Is_verified = false
 		var empty = ""
 		credentials.Token = &empty
 		credentials.Refresh_token = &empty
@@ -229,6 +220,15 @@ func Signup() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": insertErr})
 			return
 		}
+
+		var code = utils.GenerateRandomString(8)
+		var userVerif models.UserVerifModel
+		userVerif.VerifUsername = credentials.Email
+		userVerif.Code = &code
+
+		emailVerifCollection.InsertOne(ctx, userVerif)
+		helper.SendVerifEmail(credentials, code)
+
 		defer cancel()
 		c.JSON(http.StatusOK, "")
 	}
@@ -615,7 +615,7 @@ func VerifyAccount() gin.HandlerFunc {
 			return
 		}
 
-		filter := bson.D{{"username", user.VerifUsername}}
+		filter := bson.D{{"email", user.VerifUsername}}
 		update := bson.D{{"$set",
 			bson.D{
 				{"is_verified", true},

@@ -20,7 +20,7 @@ export class ConfigService {
   private _price_variation_url = this._api_url + "/reservation/accommodation/price-variation/"
   private _availability_url = this._api_url + "/reservation/availability/"
   private _create_price_variation_url = this._api_url + "/reservation/host/accommodation/price-variation/"
-  private _create_availability_url = this._api_url + "/reservation/host/availability/create"
+  private _create_availability_url = this._api_url + "/reservation/host/availability/create/"
   private _delete_availability_url = this._api_url + "/reservation/host/availability/delete"
   private _delete_price_variation_url = this._api_url + "/reservation/host/accommodation/price-variation/delete"
   private _reservation_url = this._api_url + "/reservation/guest/"

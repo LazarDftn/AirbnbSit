@@ -102,7 +102,7 @@ func (rr *ReservationRepo) CreateTables() {
 					(location text, accomm_id text, reservation_id UUID, guest_email text, host_email text, price int, 
 					num_of_People int, start_date timestamp, end_date timestamp, hostId text, guestId text, 
 					PRIMARY KEY ((location), accomm_id, end_date, start_date, reservation_id)) 
-					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date DESC, start_date DESC, reservation_id ASC)`,
+					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date ASC, start_date ASC, reservation_id ASC)`,
 			"reservation_by_accommodation")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -171,7 +171,7 @@ func (rr *ReservationRepo) CreateTables() {
 
 }
 
-func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability) (string, error) {
+func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability, id string) (string, error) {
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND accomm_id = ?
 	 AND end_date >= ?`,
@@ -219,7 +219,19 @@ func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability)
 	defer cancel()
 	avCollection := rr.getAvCollection()
 
-	result, err := avCollection.InsertOne(ctx, &availability)
+	var avByUser domain.AvailabilityByUser
+
+	avByUser.AvailabilityID = availability.AvailabilityID
+	avByUser.AccommID = availability.AccommID
+	avByUser.Location = availability.Location
+	avByUser.Name = availability.Name
+	avByUser.MinCapacity = availability.MinCapacity
+	avByUser.MaxCapacity = availability.MaxCapacity
+	avByUser.StartDate = availability.StartDate
+	avByUser.EndDate = availability.EndDate
+	avByUser.UserId = id
+
+	result, err := avCollection.InsertOne(ctx, avByUser)
 	if err != nil {
 		rr.logger.Println(err)
 		return "", err
@@ -227,6 +239,23 @@ func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability)
 	rr.logger.Println(result.InsertedID)
 
 	return "Changed", nil
+}
+
+func (rr *ReservationRepo) DeleteAvsByHost(id string) string {
+
+	avCollection := rr.getAvCollection()
+
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	_, err := avCollection.DeleteMany(ctx, bson.M{"userId": id})
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "Database error"
+	}
+
+	return ""
 }
 
 func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability) string {

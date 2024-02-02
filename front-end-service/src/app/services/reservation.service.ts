@@ -177,7 +177,7 @@ export class ReservationService {
           'token': localStorage.getItem("airbnbToken") + ''
         });
 
-        return this.apiService.post(this.config.create_availability_url, avDTO, postHeaders)
+        return this.apiService.post(this.config.create_availability_url+localStorage.getItem("airbnbId"), avDTO, postHeaders)
         .pipe(map((data) => {
           return data
         }));

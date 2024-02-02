@@ -69,7 +69,8 @@ export class EditAccommodationPageComponent implements OnInit{
     this.reservationService.createAvailability(this.av).subscribe(data => {
 
       if (data.body != "Changed"){
-        this.submitError = data.body
+        //this.submitError = data.body
+        this.toastr.warning(data.body, "Warning")
       } else {
         this.router.navigate(['accommodation/' + this.accomm.id])
         this.toastr.success("Successfully added Availabilty"!, "Success");
@@ -89,7 +90,8 @@ export class EditAccommodationPageComponent implements OnInit{
 
     this.reservationService.createPriceVariation(this.pv).subscribe(data => {
       if (data.body != "Created"){
-        this.submitError = data.body
+        //this.submitError = data.body
+        this.toastr.warning(data.body, "Warning")
       } else {
         this.router.navigate(['accommodation/' + this.accomm.id])
         this.toastr.success("Successfully added new increase period!", "Success");

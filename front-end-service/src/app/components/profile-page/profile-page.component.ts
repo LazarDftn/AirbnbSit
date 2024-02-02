@@ -43,11 +43,14 @@ export class ProfilePageComponent implements OnInit{
 
   deleteAccount(){
 
+    if (confirm("Are you sure you want to delete your account?") == true){
+
     this.authService.deleteAccount().subscribe(data => {
-      console.log(data)
+      this.authService.logout()
     }, err => {
-      alert(err.error.error)
+      this.toastr.warning("You have pending reservations", "Warning")
     })
+  }
   }
 
   editProfile(){

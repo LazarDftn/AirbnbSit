@@ -123,8 +123,8 @@ export class ProfilePageComponent implements OnInit {
         localStorage.setItem("airbnbEmail", this.userToEdit.email)
       }
       this.userToEdit = new User()
-      window.location.reload()
-      this.toastr.success("profile edited", "Success")
+      reloadTimeOut();
+      this.toastr.success("Profile successfully edited!", "Success")
     }, err => {
       this.toastr.error(err.error.error, "Error")
       this.userToEdit = new User()
@@ -160,4 +160,9 @@ export class ProfilePageComponent implements OnInit {
     return true
   }
 
+}
+
+//reload page after 3 seconds
+function reloadTimeOut(){
+  setTimeout(() => window.location.reload(), 3000)
 }

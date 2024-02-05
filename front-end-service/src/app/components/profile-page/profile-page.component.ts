@@ -41,16 +41,24 @@ export class ProfilePageComponent implements OnInit {
     })
   }
 
+  // deleteAccount() {
+
+  //   if (confirm("Are you sure you want to delete your account?") == true) {
+
+  //     this.authService.deleteAccount().subscribe(data => {
+  //       this.authService.logout()
+  //     }, err => {
+  //       this.toastr.warning("You have pending reservations", "Warning")
+  //     })
+  //   }
+  // }
+
   deleteAccount() {
-
-    if (confirm("Are you sure you want to delete your account?") == true) {
-
       this.authService.deleteAccount().subscribe(data => {
         this.authService.logout()
       }, err => {
         this.toastr.warning("You have pending reservations", "Warning")
       })
-    }
   }
 
   editProfile() {

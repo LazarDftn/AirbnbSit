@@ -197,7 +197,7 @@ export class ViewAccommodationPageComponent implements OnInit {
     })
   }
   
-
+  
   
 }
 

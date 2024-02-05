@@ -73,11 +73,11 @@
                     </div>
                 </div>
             </div>
+            <!-- Before filtered search -->
             <div class="accomms-frame">
                 <div *ngFor="let accomm of accommodations" class="accomm-card">
                     <div class="card" (click)="goTo(accomm)">
-                        <img
-                            src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png" />
+                        <img src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png" />
                         <h4>{{accomm.name}}</h4>
                         <hr>
                         <p><i class="fas fa-location-dot" style="font-size: 15px;margin-right: 2px;"></i>{{accomm.location}}</p>
@@ -85,13 +85,16 @@
                     </div>
                 </div>
             </div>
+
+            <!-- After filtered search -->
             <div class="accomms-frame">
                 <div *ngFor="let av of availabilities" class="accomm-card">
                     <div class="card" (click)="goToAvailable(av)">
-                        <img
-                            src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png" />
+                        <img src="https://www.markbuyshousesal.com/app/themes/carrot/assets/images/property-placeholder.png" />
                         <h4>{{av.name}}</h4>
-                        <p>{{av.location}}</p>
+                        <hr>
+                        <p><i class="fas fa-location-dot" style="font-size: 15px;margin-right: 2px;"></i>{{av.location}}</p>
+                        <p><i class="fas fa-bed" style="font-size: 15px;margin-right: 2px;"></i>{{av.maxCapacity}} people</p>
                     </div>
                 </div>
             </div>

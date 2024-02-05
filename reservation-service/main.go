@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"reservation-service/handlers"
 	"reservation-service/repositories"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,13 +23,17 @@ func main() {
 	logger := log.New(os.Stdout, "[product-api] ", log.LstdFlags)
 	storeLogger := log.New(os.Stdout, "[reservation-store] ", log.LstdFlags)
 
+	timeoutContext, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	// NoSQL: Initialize Reservation Repository store
-	store, err := repositories.New(storeLogger)
+	store, err := repositories.New(storeLogger, timeoutContext)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	defer store.CloseSession()
+	defer store.CloseSession(timeoutContext)
 	store.CreateTables()
+
+	store.Ping()
 
 	//Initialize the handler and inject said logger
 	reservationHandler := handlers.NewReservationsHandler(logger, store)
@@ -45,14 +51,17 @@ func main() {
 	rg1.GET("/accommodation/price-variation/:location/:accomm_id", reservationHandler.GetPriceVariationByAccommId)
 	rg1.POST("/check-price/", reservationHandler.CheckPrice)
 	rg1.GET("/availability/:location/:accomm_id", reservationHandler.GetAvailability)
+	rg1.POST("/search/", reservationHandler.SearchAccommodations)
+	rg1.POST("/check-pending/", reservationHandler.GetPendingReservationsByUser)
 
 	rg2.POST("/accommodation-price/", reservationHandler.PostPrice)
 	rg2.POST("/accommodation/price-variation/", reservationHandler.CreatePriceVariation)
 	rg2.POST("/accommodation/price-variation/delete", reservationHandler.DeletePriceVariation)
-	rg2.POST("/availability/create", reservationHandler.CreateAvailability)
+	rg2.POST("/availability/create/:id", reservationHandler.CreateAvailability)
 	rg2.POST("/availability/delete", reservationHandler.DeleteAvailability)
 
 	rg3.POST("/", reservationHandler.PostReservation)
+	rg3.POST("/delete/", reservationHandler.DeleteReservation)
 
 	// adding the authorization middleware for Guest and Host, depending on the User action route
 	// router.Use(accommodationHandler.Authorize("HOST")).POST("/create", accommodationHandler.PostAccommodation)

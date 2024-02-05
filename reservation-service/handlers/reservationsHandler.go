@@ -38,16 +38,22 @@ func NewReservationsHandler(l *log.Logger, r *repositories.ReservationRepo) *Res
 
 func (r *ReservationsHandler) PostReservation(c *gin.Context) {
 	var res *domain.Reservation
-	fmt.Print(res)
+
 	if err := c.ShouldBindJSON(&res); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	if (res.StartDate).Before(time.Now().Add(1)) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "The start date must be in the future!"})
+		return
+	}
+
 	err := r.repo.InsertReservation(res)
 	if err != "" {
-		r.logger.Print("Database exception: ", res.StartDate)
+		r.logger.Print("Database exception: ", err)
 		e := json.NewEncoder(c.Writer)
-		e.Encode(res)
+		e.Encode(err)
 	}
 	c.Writer.WriteHeader(http.StatusCreated)
 }
@@ -108,6 +114,7 @@ func (rr *ReservationsHandler) GetPriceByAccommodation(c *gin.Context) {
 
 }
 
+//checking the price for selected dates in some period of time
 func (rr *ReservationsHandler) CheckPrice(c *gin.Context) {
 
 	var res domain.Reservation
@@ -178,6 +185,35 @@ func (rr *ReservationsHandler) GetPriceVariationByAccommId(c *gin.Context) {
 	e.Encode(variations)
 }
 
+func (rr *ReservationsHandler) SearchAccommodations(c *gin.Context) {
+
+	var av domain.Availability
+
+	if err := c.ShouldBindJSON(&av); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	fmt.Print(av.Location)
+	fmt.Print(av.MinCapacity)
+	fmt.Print(av.MaxCapacity)
+	fmt.Print(av.StartDate)
+	fmt.Print(av.EndDate)
+
+	availabilites, err := rr.repo.SearchAccommodations(av)
+	if err != nil {
+		rr.logger.Print("Database exception: ", err)
+	}
+
+	if availabilites == nil {
+		return
+	}
+
+	e := json.NewEncoder(c.Writer)
+	e.Encode(availabilites)
+}
+
+//comparing price in the increased period of time and others dates and calculating it
 func CompareAndCalculate(vr []domain.PriceVariation, res domain.Reservation) (float64, []int) {
 
 	var finalPrice = 0.0
@@ -213,6 +249,8 @@ func GetNumberOfDays(startDate time.Time, endDate time.Time) float64 {
 
 func (r *ReservationsHandler) CreateAvailability(c *gin.Context) {
 
+	id := c.Param("id")
+
 	var av domain.Availability
 
 	if err := c.ShouldBindJSON(&av); err != nil {
@@ -220,7 +258,7 @@ func (r *ReservationsHandler) CreateAvailability(c *gin.Context) {
 		return
 	}
 
-	message, err := r.repo.InsertAvailability(&av)
+	message, err := r.repo.InsertAvailability(&av, id)
 	if err != nil {
 		r.logger.Print("Database exception: ", err)
 		e := json.NewEncoder(c.Writer)
@@ -244,6 +282,7 @@ func (r *ReservationsHandler) DeleteAvailability(c *gin.Context) {
 		c.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	c.JSON(http.StatusOK, nil)
 }
 
@@ -273,6 +312,8 @@ func (r *ReservationsHandler) GetAvailability(c *gin.Context) {
 	availability, err := r.repo.GetAvailability(location, accommId)
 	if err != nil {
 		r.logger.Print("Database exception: ", err)
+		e := json.NewEncoder(c.Writer)
+		e.Encode(err.Error())
 	}
 
 	if availability == nil {
@@ -283,12 +324,67 @@ func (r *ReservationsHandler) GetAvailability(c *gin.Context) {
 	e.Encode(availability)
 }
 
+func (r *ReservationsHandler) GetPendingReservationsByUser(c *gin.Context) {
+
+	var user domain.User
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	isPending, err := r.repo.GetPendingReservationsByUser(*user.User_type, user.ID.Hex())
+
+	if err != nil {
+		c.JSON(418, gin.H{"error": "This user has pending reservations!"})
+		return
+	}
+
+	if isPending {
+		c.JSON(418, gin.H{"error": "This user has pending reservations!"})
+		return
+	}
+
+	res := r.repo.DeleteAvsByHost(user.ID.Hex())
+
+	fmt.Println(res)
+
+	c.JSON(http.StatusOK, "")
+}
+
+func (r *ReservationsHandler) DeleteReservation(c *gin.Context) {
+
+	var res domain.Reservation
+
+	if err := c.ShouldBindJSON(&res); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	fmt.Println(res)
+
+	if (res.StartDate).Before(time.Now().Add(1)) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "This reservation has already started!"})
+		return
+	}
+
+	_, err := r.repo.DeleteReservation(res)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, "")
+}
+
 func (r *ReservationsHandler) CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)

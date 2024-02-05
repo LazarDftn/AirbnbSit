@@ -11,6 +11,7 @@ import { ForgotPasswordPageComponent } from './components/forgot-password-page/f
 import { SearchAccommodationPageComponent } from './components/search-accommodation-page/search-accommodation-page.component';
 import { ViewAccommodationPageComponent } from './components/view-accommodation-page/view-accommodation-page.component';
 import { EditAccommodationPageComponent } from './components/edit-accommodation-page/edit-accommodation-page.component';
+import { ProfilePageComponent } from './components/profile-page/profile-page.component';
 
 const routes: Routes = [
   {path: '', pathMatch:'full', component: WelcomePageComponent},
@@ -20,12 +21,13 @@ const routes: Routes = [
   {path: 'account/:id/:id2', component: AccountVerifPageComponent},
   {path: 'forgot-password-page', component: ForgotPasswordPageComponent},
   {path: 'welcome-page', component: WelcomePageComponent},
+  {path: 'profile-page', component: ProfilePageComponent},
   {path: 'accommodation/:id', component: ViewAccommodationPageComponent},
   {path: 'accommodation/edit/:id', component: EditAccommodationPageComponent}]
 ;
 
 @NgModule({
-  imports: [CommonModule, RouterModule.forRoot(routes)],
+  imports: [CommonModule, RouterModule.forRoot(routes,{scrollPositionRestoration: 'enabled'})],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

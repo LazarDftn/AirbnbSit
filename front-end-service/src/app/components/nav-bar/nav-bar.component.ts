@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
@@ -8,7 +9,8 @@ import { AuthService } from 'src/app/services/auth.service';
 })
 export class NavBarComponent {
 
-  constructor(private authService: AuthService){}
+  constructor(private authService: AuthService,
+    private toastr: ToastrService){}
 
   // booleans for the navbar to check the users role and restrict access to pages
   isUserLoggedIn = this.authService.userIsLoggedIn()
@@ -17,6 +19,9 @@ export class NavBarComponent {
 
   logout(){
     this.authService.logout()
+    this.toastr.success("Successfully Loged out!", "Success");
   }
+
+  username = localStorage.getItem("airbnbUsername")
 
 }

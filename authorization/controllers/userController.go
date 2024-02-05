@@ -4,16 +4,23 @@ import (
 	"auth/database"
 	helper "auth/helpers"
 	"auth/models"
+	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/d-vignesh/go-jwt-auth/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,6 +30,9 @@ import (
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
 var emailVerifCollection *mongo.Collection = database.OpenCollection(database.Client, "emailVerif")
 var validate = validator.New()
+var profileAddress string
+var resAddress string
+var accommAddress string
 
 func HashPassword(password string) string {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -30,6 +40,19 @@ func HashPassword(password string) string {
 		log.Panic(err)
 	}
 	return string(bytes)
+}
+
+func SetAddress() {
+
+	envFile, err := godotenv.Read(".env")
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	profileAddress = envFile["PROFILE_ADDRESS"]
+	resAddress = envFile["RESERVATION_ADDRESS"]
+	accommAddress = envFile["ACCOMMODATION_ADDRESS"]
 }
 
 func VerifyPassword(userPassword string, providedPassword string) (bool, string) {
@@ -56,8 +79,6 @@ func Signup() gin.HandlerFunc {
 			return
 		}
 
-		//user.Is_verified = false *FOR TESTING PURPOSES, UNCOMMENT LATER
-
 		validationErr := validate.Struct(user)
 		if validationErr != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
@@ -70,12 +91,11 @@ func Signup() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the email"})
 		}
 
+		unhashedPassword := *user.Password
 		password := HashPassword(*user.Password)
 		user.Password = &password
 
-		/*file, err := os.Open("authorization/controllers/blacklist.txt")
-
-		// Error finding the blacklist.txt file no matter what path we try to use
+		file, err := os.Open("blacklist.txt")
 
 		if err != nil {
 			log.Panic(err.Error())
@@ -93,25 +113,23 @@ func Signup() gin.HandlerFunc {
 
 		file.Close()
 
-		var found = ""
+		var found string
 
 		for _, line := range fileLines {
-			if strings.Contains(password, line) {
+			if strings.Contains(unhashedPassword, line) {
 				found = line
 			}
 		}
 
 		if found != "" {
-			log.Panic(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "This password is on Blacklist, please change it"})
+			return
 		}
-
-		*/
 
 		usernameCount, err := userCollection.CountDocuments(ctx, bson.M{"username": user.Username})
 		if err != nil {
-			log.Panic(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the username"})
+			return
 		}
 
 		if emailCount > 0 {
@@ -129,22 +147,90 @@ func Signup() gin.HandlerFunc {
 		user.Token = &token
 		user.Refresh_token = &refreshToken
 
+		var profile models.Profile
+
+		profile.Username = user.Username
+		profile.Email = user.Email
+		profile.First_name = user.First_name
+		profile.Last_name = user.Last_name
+		profile.Address = user.Address
+		profile.User_type = user.User_type
+		profile.ID = primitive.NewObjectID()
+
+		jsonProfile, errr := json.Marshal(&profile)
+
+		if errr != nil {
+			fmt.Println(errr)
+		}
+
+		SetAddress()
+
+		requestBody := bytes.NewReader(jsonProfile)
+
+		req, err := http.NewRequestWithContext(ctx, "POST", profileAddress+"create", requestBody)
+		if err != nil {
+			fmt.Println("Error creating request:", err)
+			return
+		}
+
+		client := http.Client{Transport: &http.Transport{
+			MaxIdleConns:        10,
+			MaxIdleConnsPerHost: 10,
+			MaxConnsPerHost:     10,
+		}}
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println("Error making request:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to register account right now!"})
+			return
+		} else {
+			if resp.StatusCode == 418 {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "This username already exists!"})
+				return
+			}
+			if resp.StatusCode != 200 {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to register account right now!"})
+				return
+			}
+		}
+
+		// Read the response body
+		_, err = io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading response body:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to register account right now!"})
+			return
+		}
+
+		defer resp.Body.Close()
+
+		var credentials models.UserCredentialsModel
+
+		credentials.ID = profile.ID
+		credentials.Email = user.Email
+		credentials.Password = user.Password
+		credentials.Is_verified = false
+		var empty = ""
+		credentials.Token = &empty
+		credentials.Refresh_token = &empty
+
+		_, insertErr := userCollection.InsertOne(ctx, credentials)
+		if insertErr != nil {
+
+			c.JSON(http.StatusInternalServerError, gin.H{"error": insertErr})
+			return
+		}
+
 		var code = utils.GenerateRandomString(8)
 		var userVerif models.UserVerifModel
-		userVerif.VerifUsername = user.Username
+		userVerif.VerifUsername = credentials.Email
 		userVerif.Code = &code
 
 		emailVerifCollection.InsertOne(ctx, userVerif)
-		helper.SendVerifEmail(user, code)
+		helper.SendVerifEmail(credentials, code)
 
-		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
-		if insertErr != nil {
-			msg := fmt.Sprintf("User item was not created")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
-			return
-		}
 		defer cancel()
-		c.JSON(http.StatusOK, resultInsertionNumber)
+		c.JSON(http.StatusOK, "")
 	}
 
 }
@@ -153,20 +239,19 @@ func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
-		var foundUser models.User
+		var foundUser models.UserCredentialsModel
 		var userLogin models.LoginModel
+		var foundProfile models.Profile
 
 		if err := c.BindJSON(&userLogin); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		fmt.Print(userLogin.Email)
-
 		err := userCollection.FindOne(ctx, bson.M{"email": userLogin.Email}).Decode(&foundUser)
 		defer cancel()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "email or password is incorrect"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "email is incorrect"})
 			return
 		}
 
@@ -175,25 +260,274 @@ func Login() gin.HandlerFunc {
 			return
 		}
 
-		passwordIsValid, msg := VerifyPassword(*userLogin.Password, *foundUser.Password)
-		if passwordIsValid != true {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
+		passwordIsValid, _ := VerifyPassword(*userLogin.Password, *foundUser.Password)
+		if !passwordIsValid {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "password is incorrect"})
 			return
 		}
 
 		if foundUser.Email == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
 		}
-		token, refreshToken, _ := helper.GenerateAllTokens(*foundUser.Username, *foundUser.User_type)
-		helper.UpdateAllTokens(token, refreshToken, foundUser.ID.Hex())
-		err = userCollection.FindOne(ctx, bson.M{"user_id": foundUser.ID.Hex()}).Decode(&foundUser)
+
+		SetAddress()
+
+		req, err := http.NewRequest(http.MethodGet, profileAddress+foundUser.ID.Hex(), nil)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
+			return
+		}
+
+		res, errClient := http.DefaultClient.Do(req)
+
+		if errClient != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
+			return
+		}
+		if res.StatusCode != 200 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
+			return
+		}
+
+		err = json.NewDecoder(res.Body).Decode(&foundProfile)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
+			return
+		}
+
+		token, refreshToken, _ := helper.GenerateAllTokens(*foundProfile.Username, *foundProfile.User_type)
+		helper.UpdateAllTokens(token, refreshToken, foundProfile.ID.Hex())
+		//err = userCollection.FindOne(ctx, bson.M{"user_id": foundProfile.ID.Hex()}).Decode(&foundProfile)
+		foundProfile.Token = &token
+		foundProfile.Refresh_token = &refreshToken
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, foundUser)
+		c.JSON(http.StatusOK, foundProfile)
 	}
+}
+
+func DeleteAccount() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+		var profile models.Profile
+
+		if err := c.BindJSON(&profile); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		fmt.Println(profile)
+		fmt.Println(profile.Username)
+		fmt.Println(&profile.ID)
+		fmt.Println(profile.Email)
+
+		jsonProfile, err := json.Marshal(profile)
+
+		fmt.Println(jsonProfile)
+
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		requestBody := bytes.NewReader(jsonProfile)
+
+		req, err := http.NewRequest(http.MethodPost, resAddress+"check-pending/", requestBody)
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
+			return
+		}
+
+		res, errClient := http.DefaultClient.Do(req)
+
+		if errClient != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
+			return
+		}
+		if res.StatusCode != 200 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "You have pending reservations!"})
+			return
+		}
+
+		req, err = http.NewRequest(http.MethodDelete, accommAddress+profile.ID.Hex(), nil)
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
+			return
+		}
+
+		res, errClient = http.DefaultClient.Do(req)
+
+		if errClient != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
+			return
+		}
+		if res.StatusCode != 200 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting your accommodations!"})
+			return
+		}
+
+		req, err = http.NewRequest(http.MethodDelete, profileAddress+profile.ID.Hex(), nil)
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting profile"})
+			return
+		}
+
+		res, errClient = http.DefaultClient.Do(req)
+
+		if errClient != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error!"})
+			return
+		}
+		if res.StatusCode != 200 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your accommodations!"})
+			return
+		}
+
+		result, errr := userCollection.DeleteOne(ctx, bson.D{{Key: "_id", Value: profile.ID}})
+
+		if errr != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while deleting your profile!"})
+			return
+		}
+
+		if result.DeletedCount > 0 {
+			c.JSON(http.StatusOK, gin.H{"message": "Profile deleted successfully"})
+			return
+		} else {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Profile not found"})
+			return
+		}
+	}
+}
+
+func EditAccount(c *gin.Context) {
+
+	id := c.Param("id")
+
+	var user models.UserEdit
+	var foundUser models.UserCredentialsModel
+
+	objectId, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := c.BindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = userCollection.FindOne(c, bson.M{"_id": objectId}).Decode(&foundUser)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if user.NewPassword != "" || user.Email != "" {
+
+		passwordIsValid, _ := VerifyPassword(user.OldPassword, *foundUser.Password)
+		if !passwordIsValid {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Old password is incorrect!"})
+			return
+		}
+
+		if user.Email != "" {
+
+			foundEmail, err := userCollection.CountDocuments(c, bson.M{"email": user.Email})
+
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			if foundEmail > 0 {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "User with this email already exists!"})
+				return
+			}
+		}
+	}
+
+	var userToEdit models.Profile
+	userToEdit.Address = &user.Address
+	userToEdit.First_name = &user.First_name
+	userToEdit.Last_name = &user.Last_name
+	userToEdit.Username = &user.Username
+	userToEdit.Email = &user.Email
+
+	jsonProfile, errr := json.Marshal(userToEdit)
+
+	if errr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": errr.Error()})
+		return
+	}
+
+	requestBody := bytes.NewReader(jsonProfile)
+
+	SetAddress()
+
+	req, err := http.NewRequest(http.MethodPut, profileAddress+id, requestBody)
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving profile"})
+		return
+	}
+
+	res, errClient := http.DefaultClient.Do(req)
+
+	if errClient != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errClient.Error()})
+		return
+	}
+	if res.StatusCode == 418 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Your new username already exists!"})
+		return
+	}
+	if res.StatusCode != 200 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unexpected error while editing your profile!"})
+		return
+	}
+
+	if user.NewPassword != "" {
+
+		newHashedPassword := HashPassword(user.NewPassword)
+
+		userCollection.UpdateOne(c, bson.M{"_id": objectId}, bson.M{
+			"$set": bson.M{
+				"password": newHashedPassword,
+			}})
+
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, "")
+			return
+		}
+	}
+
+	if user.Email != "" {
+		userCollection.UpdateOne(c, bson.M{"_id": objectId}, bson.M{
+			"$set": bson.M{
+				"email": user.Email,
+			}})
+
+		if err != nil {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, "")
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, "Profile edited successfully!")
 }
 
 func GetUsers() gin.HandlerFunc {
@@ -281,7 +615,7 @@ func VerifyAccount() gin.HandlerFunc {
 			return
 		}
 
-		filter := bson.D{{"username", user.VerifUsername}}
+		filter := bson.D{{"email", user.VerifUsername}}
 		update := bson.D{{"$set",
 			bson.D{
 				{"is_verified", true},

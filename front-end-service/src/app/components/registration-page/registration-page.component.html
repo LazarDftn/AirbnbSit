@@ -21,7 +21,7 @@
                     <div class="box1">
                         <div class="form-group">
                             <label for="FName">First Name:</label>
-                            <input class="form-control" formControlName="fname" placeholder="Enter your First Name" [(ngModel)]="user.fName" required>
+                            <input class="form-control" formControlName="fname" placeholder="Enter your First Name" [(ngModel)]="user.firstName" required>
                             <div *ngIf="userForm.controls['fname'].errors && submitted" style="color:red; font-size:11px;">
                                 Please enter a valid name!
                               </div>
@@ -29,7 +29,7 @@
     
                         <div class="form-group">
                             <label for="LName">Last Name:</label>
-                            <input class="form-control" formControlName="lname" placeholder="Enter your Last Name" [(ngModel)]="user.lName" required>
+                            <input class="form-control" formControlName="lname" placeholder="Enter your Last Name" [(ngModel)]="user.lastName" required>
                             <div *ngIf="userForm.controls['lname'].errors && submitted" style="color:red; font-size:11px;">
                                 Please enter a valid last name!
                               </div>

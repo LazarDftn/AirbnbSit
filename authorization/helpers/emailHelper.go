@@ -9,7 +9,7 @@ import (
 )
 
 // sends the email with account verification link
-func SendVerifEmail(user models.User, code string) {
+func SendVerifEmail(user models.UserCredentialsModel, code string) {
 
 	/* There needs to be an administrator who sends these emails to users
 	   and this is how AirBnb 'logs in' to his account (this 16 char string
@@ -21,7 +21,7 @@ func SendVerifEmail(user models.User, code string) {
 
 	subject := "Subject: Verify AirBnb clone account\n"
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-	body := "<html><body><a href='https://localhost:4200/account/" + *user.Username + "/" + code + "'>https://localhost:4200/account/" + *user.Username + "/" + code + "</a></body></html>"
+	body := "<html><body><a href='https://localhost:4200/account/" + *user.Email + "/" + code + "'>Verify account</a></body></html>"
 
 	msg := []byte(subject + mime + body)
 

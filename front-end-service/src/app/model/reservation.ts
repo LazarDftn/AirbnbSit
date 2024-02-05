@@ -6,6 +6,8 @@ export class Reservation{
     location: string;
     guestEmail: string;
     hostEmail: string;
+    guestId: string;
+    hostId: string;
     price: number;
     numOfPeople: number;
     startDate: Date;
@@ -16,6 +18,8 @@ export class Reservation{
         this.location = ""
         this.guestEmail = ""
         this.hostEmail = ""
+        this.guestId = ""
+        this.hostId = ""
         this.price = 0
         this.numOfPeople = 0
         this.startDate = new Date(formatDate(Date.now(),'yyyy-MM-dd','en_us'))

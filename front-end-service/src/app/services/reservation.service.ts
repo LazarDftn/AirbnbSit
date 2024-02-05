@@ -134,6 +134,8 @@ export class ReservationService {
           location: res.location,
           guestEmail: res.guestEmail,
           hostEmail: res.hostEmail,
+          guestId: res.guestId,
+          hostId: res.hostId,
           price: res.price,
           numOfPeople: res.numOfPeople,
           startDate: new Date(Date.UTC(res.startDate.getFullYear(), res.startDate.getMonth(), res.startDate.getDate(),
@@ -175,7 +177,7 @@ export class ReservationService {
           'token': localStorage.getItem("airbnbToken") + ''
         });
 
-        return this.apiService.post(this.config.create_availability_url, avDTO, postHeaders)
+        return this.apiService.post(this.config.create_availability_url+localStorage.getItem("airbnbId"), avDTO, postHeaders)
         .pipe(map((data) => {
           return data
         }));
@@ -200,6 +202,64 @@ export class ReservationService {
         });
 
         return this.apiService.post(this.config.create_price_variation_url, pvDTO, postHeaders)
+        .pipe(map((data) => {
+          return data
+        }));
+      }
+
+      searchAccommodations(av: Availability){
+
+        var avDTO = {
+          availabilityId: av.availabilityId,
+          accommId: av.accommId,
+          name: av.name,
+          location: av.location,
+          minCapacity: av.minCapacity,
+          maxCapacity: av.maxCapacity,
+          startDate: new Date(Date.UTC(av.startDate.getFullYear(), av.startDate.getMonth(), av.startDate.getDate(),
+          av.startDate.getHours() - 1, av.startDate.getMinutes(), av.startDate.getMinutes())),
+          endDate: new Date(Date.UTC(av.endDate.getFullYear(), av.endDate.getMonth(), av.endDate.getDate(),
+          av.endDate.getHours() - 1, av.endDate.getMinutes(), av.endDate.getMinutes()))
+        }
+
+        console.log(avDTO)
+
+        const postHeaders = new HttpHeaders({
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'token': localStorage.getItem("airbnbToken") + ''
+        });
+
+        return this.apiService.post(this.config.search_accomm_url, avDTO, postHeaders)
+        .pipe(map((data) => {
+          return data
+        }));
+      }
+
+      cancelReservation(res: Reservation){
+
+        var resDTO = {
+          accommId: res.accommodationId,
+          location: res.location,
+          guestEmail: res.guestEmail,
+          hostEmail: res.hostEmail,
+          guestId: res.guestId,
+          hostId: res.hostId,
+          price: res.price,
+          numOfPeople: res.numOfPeople,
+          startDate: res.startDate,
+          endDate: res.endDate
+        }
+
+        console.log(resDTO)
+        
+        const postHeaders = new HttpHeaders({
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'token': localStorage.getItem("airbnbToken") + ''
+        });
+
+        return this.apiService.post(this.config.cancel_reservation_url, resDTO, postHeaders)
         .pipe(map((data) => {
           return data
         }));

@@ -2,13 +2,14 @@
     margin-top: 20px;
     padding: 25px;
     background-color: #f3f3f3;
-    /* border: solid red 2px; */
+    box-shadow: 0 0.15rem 1.75rem 0 rgb(33 40 50 / 15%);
 }
 
 .form-btn{
     margin-top: 10px;
 }
 
+/* accomm list css below*/
 .accomm-card {
     width: 25%;
     display: inline-block;
@@ -20,4 +21,9 @@
 
 .accomms-frame {
     padding: 20px;
+}
+
+.card h4{
+    margin-top: 10px;
+    margin-bottom: 0;
 }

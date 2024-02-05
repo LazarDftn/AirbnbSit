@@ -19,6 +19,23 @@ services:
     networks:
       - network
 
+  profile_service:
+    image: profile_service
+    container_name: profile_service
+    hostname: ${PROFILE_SERVICE_HOST}
+    build:
+      context: ./profile-service/
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      PROFILE_DB_HOST: ${PROFILE_DB_HOST}
+      PROFILE_DB_PORT: ${PROFILE_DB_PORT}
+      PROFILE_SERVICE_PORT: ${PROFILE_SERVICE_PORT}
+    depends_on:
+      - profile_db
+    networks:
+      - network
+
   accommodations_service:
     image: accommodations_service
     container_name: accommodations_service
@@ -54,6 +71,8 @@ services:
     depends_on:
       reservation_db:
         condition: service_healthy
+      reservations_mongo_db:
+        condition: service_healthy
     networks:
       - network  
 
@@ -84,6 +103,27 @@ services:
     image: mongo
     container_name: accommodations_db
     restart: on-failure
+    networks:
+      - network
+
+  profile_db:
+    image: mongo
+    container_name: profile_db
+    restart: on-failure
+    networks:
+      - network
+
+  reservations_mongo_db:
+    image: mongo
+    container_name: reservations_mongo_db
+    restart: on-failure
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - network
 

@@ -25,6 +25,7 @@ export class AccommodationService {
             Owner: localStorage.getItem("airbnbEmail"),
             Name: accommodation.name,
             Location: accommodation.location,
+            OwnerId: localStorage.getItem("airbnbId"),
             Benefits: accommodation.benefits,
             MinCapacity: accommodation.minCapacity,
             MaxCapacity: accommodation.maxCapacity

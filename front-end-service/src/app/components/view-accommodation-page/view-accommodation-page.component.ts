@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { Accommodation } from 'src/app/model/accommodation';
 import { Availability } from 'src/app/model/availability';
 import { PriceVariation } from 'src/app/model/priceVariation';
@@ -19,7 +20,8 @@ export class ViewAccommodationPageComponent implements OnInit {
     private accommService: AccommodationService,
     private reservationService: ReservationService,
     private router: Router,
-    private route: ActivatedRoute){}
+    private route: ActivatedRoute,
+    private toastr: ToastrService){}
     
   accommId = ""
   price = 0 //accommodation price per day
@@ -47,6 +49,7 @@ export class ViewAccommodationPageComponent implements OnInit {
       this.accomm.location = data.location
       this.accomm.benefits = data.benefits
       this.accomm.Owner = data.owner
+      this.accomm.ownerId = data.ownerId
       this.accomm.id = data.id
       this.accomm.minCapacity = data.minCapacity
       this.accomm.maxCapacity = data.maxCapacity
@@ -54,6 +57,7 @@ export class ViewAccommodationPageComponent implements OnInit {
 
       this.reservationService.getReservationsByAccommId(this.accomm.location, this.accommId + "").subscribe(data => {
         this.reservations = data
+        console.log(this.reservations)
       })
 
       this.reservationService.getAvailabilities(this.accomm.location, this.accommId + "").subscribe(data => {
@@ -76,7 +80,9 @@ export class ViewAccommodationPageComponent implements OnInit {
 
   addPrice(){
     this.reservationService.createPrice(this.accomm.price, this.accomm.payPer, this.accomm.id).subscribe
-    (data => {window.location.reload()})
+    (data => {reloadTimeOut();
+      this.toastr.success("Successfully added price!", "Success!")
+    })
   }
 
   // before Guest makes the reservation, check service for any price variations for given period and calculate 
@@ -88,7 +94,7 @@ export class ViewAccommodationPageComponent implements OnInit {
     if (!(this.reservation.numOfPeople >= this.accomm.minCapacity) ||
     !(this.reservation.numOfPeople <= this.accomm.maxCapacity)){
 
-      alert("Number of people is above or below capacity!")
+      this.toastr.warning("Number of people is above or below capacity!", "Warning!")
       return
     }
 
@@ -134,9 +140,10 @@ export class ViewAccommodationPageComponent implements OnInit {
   deleteAvailability(av: Availability){
 
     this.reservationService.deleteAvailability(av).subscribe(data => {
-        window.location.reload()
+        reloadTimeOut();
+        this.toastr.success("Successfully deleted this Availability!", "Success");
     }, err => {
-      alert("Can't delete availability because there are reservations during this period")
+      this.toastr.warning("Can't delete availability because there are reservations during this period", "Warning!")
     })
 
   }
@@ -144,14 +151,17 @@ export class ViewAccommodationPageComponent implements OnInit {
   deletePriceVariation(pv: PriceVariation){
 
     this.reservationService.deletePriceVariation(pv).subscribe(data => {
-        window.location.reload()
+        reloadTimeOut();
+        this.toastr.success("Successfully deleted this Price Variation!", "Success");
     }, err => {
-      alert("Can't delete price variation because there are reservations during this period")
+      this.toastr.warning("Can't delete price variation because there are reservations during this period", "Warning!")
     })
   }
 
   makeReservation(){
     
+    this.reservation.guestId = localStorage.getItem("airbnbId")!
+    this.reservation.hostId = this.accomm.ownerId
     this.reservation.guestEmail = localStorage.getItem("airbnbEmail")!
     this.reservation.hostEmail = this.accomm.Owner
     this.reservation.accommodationId = this.accomm.id
@@ -162,9 +172,10 @@ export class ViewAccommodationPageComponent implements OnInit {
 
     this.reservationService.createReservation(this.reservation).subscribe(data => {
       if (data.body != null){
-        alert("Home is not available during this time")
+        this.toastr.warning("Home is not available during this time", "Warning!")
       } else {
-        window.location.reload()
+        reloadTimeOut();
+        this.toastr.success("Successfuly Booked the Accommadation!", "Success!")
       }
     })
   }
@@ -173,4 +184,24 @@ export class ViewAccommodationPageComponent implements OnInit {
     this.router.navigate(['accommodation/edit/' + id])
   }
 
+  cancelReservation(res: Reservation){
+
+    res.accommodationId = this.accomm.id
+    
+    this.reservationService.cancelReservation(res).subscribe(data => {
+      reloadTimeOut();
+      this.toastr.success("Successfully canceled your reservation!", "Success");
+      
+    }, err => {
+      this.toastr.warning("This reservation has already started!", "Warning");
+    })
+  }
+  
+  
+  
+}
+
+//reload page after 3 seconds
+function reloadTimeOut(){
+  setTimeout(() => window.location.reload(), 3000)
 }

@@ -5,6 +5,7 @@ import { User } from '../model/user';
 import { ApiService } from './api.service';
 import { ConfigService } from './config.service';
 import { Router } from '@angular/router';
+import { UserProfile } from '../model/userProfile';
 
 @Injectable({
   providedIn: 'root'
@@ -22,8 +23,8 @@ export class AuthService {
     signup(user: User){
 
       var userDTO = {
-        first_name: user.fName,
-        last_name: user.lName,
+        first_name: user.firstName,
+        last_name: user.lastName,
         username: user.username,
         password: user.password,
         email: user.email,
@@ -111,9 +112,11 @@ export class AuthService {
     }
     
     logout(){
+      localStorage.removeItem("airbnbId")
       localStorage.removeItem("airbnbToken")
       localStorage.removeItem("airbnbEmail")
       localStorage.removeItem("airbnbRole")
+      localStorage.removeItem("airbnbUsername")
 
       this.router.navigate(['/login-page'])
     }
@@ -138,11 +141,59 @@ export class AuthService {
     }
 
     //Check if the logged in user is the one who wants to edit his data (profile, accommodation, etc.)
-    userHasEmail(email: string): boolean {
-      var reqEmail = localStorage.getItem("airbnbEmail")
-      if (reqEmail == email){
+    userHasId(id: string): boolean {
+      var reqId = localStorage.getItem("airbnbId")
+      if (reqId == id){
         return true
       }
       return false
+    }
+
+    deleteAccount() {
+
+      var userDTO = {
+        id: localStorage.getItem("airbnbId"),
+        first_name: "",
+        last_name: "",
+        username: localStorage.getItem("airbnbUsername"),
+        email: localStorage.getItem("airbnbEmail"),
+        address: "",
+        token: localStorage.getItem("airbnbToken"),
+        user_type: localStorage.getItem("airbnbRole"),
+        refresh_token: "",
+        is_verified: true
+      }
+
+      return this.apiService.delete(this.config.delete_account_url, JSON.stringify(userDTO))
+      .pipe(map((data) => {
+        return data
+      }));
+    }
+
+    getProfile(id: string){
+
+      return this.apiService.get(this.config.profile_url + id)
+      .pipe(map((data) => {
+        return data
+      }));
+    }
+
+    editProfile(user: User, newPassword: string){
+
+      var userDTO = {
+        first_name: user.firstName,
+        last_name: user.lastName,
+        username: user.username,
+        oldPassword: user.password,
+        newPassword: newPassword,
+        email: user.email,
+        address: user.address
+      }
+
+      console.log(userDTO)
+
+      return this.apiService.put(this.config.edit_profile_url + user.ID, JSON.stringify(userDTO))
+      .pipe(map(() => {
+      }));
     }
   }

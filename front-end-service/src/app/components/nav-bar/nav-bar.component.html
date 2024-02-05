@@ -1,8 +1,10 @@
 <ul>
-    <li><a class="active" href="welcome-page">Home</a></li>
-    <li *ngIf="!isUserLoggedIn"><a href="login-page">Log in</a></li>
-    <li *ngIf="!isUserLoggedIn"><a href="registration-page">Register</a></li>
-    <li *ngIf="isUserHost"><a href="create-accommodation">Create an accommodation</a></li>
-    <li *ngIf="isUserGuest"><a href="#">Book now!</a></li>
-    <li *ngIf="isUserLoggedIn"><a (click)="logout()" style="cursor: pointer;">Log out</a></li>
-  </ul>
+  <li><a class="active" href="welcome-page">AirBnb</a></li>
+  <li *ngIf="!isUserLoggedIn"><a href="login-page">Log in</a></li>
+  <li *ngIf="!isUserLoggedIn"><a href="registration-page">Register</a></li>
+  <li *ngIf="isUserHost"><a href="create-accommodation">Create an accommodation</a></li>
+  <li *ngIf="isUserGuest"><a href="#">Book now!</a></li>
+  <li *ngIf="isUserLoggedIn"><a href="profile-page">Profile</a></li>
+  <b *ngIf="isUserLoggedIn"><a (click)="logout()" style="cursor: pointer;">Log out</a></b>
+  <b>{{username}}</b>
+</ul>

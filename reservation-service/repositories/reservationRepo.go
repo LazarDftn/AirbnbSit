@@ -1,23 +1,30 @@
 package repositories
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"reservation-service/domain"
+	"time"
 
-	// NoSQL: module containing Cassandra api client
+	// NoSQL: module containing Cassandra and Mongo api clients
 	"github.com/gocql/gocql"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// NoSQL: ReservationRepo struct encapsulating Cassandra api client
+// NoSQL: ReservationRepo struct encapsulating Cassandra and Mongo api client
 type ReservationRepo struct {
 	session *gocql.Session
 	logger  *log.Logger
+	cli     *mongo.Client
 }
 
 // NoSQL: Constructor which reads db configuration from environment and creates a keyspace
-func New(logger *log.Logger) (*ReservationRepo, error) {
+func New(logger *log.Logger, ctx context.Context) (*ReservationRepo, error) {
 	db := os.Getenv("CASS_DB")
 
 	// Connect to default keyspace
@@ -49,16 +56,41 @@ func New(logger *log.Logger) (*ReservationRepo, error) {
 		return nil, err
 	}
 
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://reservations_mongo_db:27017/"))
+	if err != nil {
+		return nil, err
+	}
+
 	// Return repository with logger and DB session
 	return &ReservationRepo{
 		session: session,
 		logger:  logger,
+		cli:     client,
 	}, nil
 }
 
 // Disconnect from database
-func (rr *ReservationRepo) CloseSession() {
+func (rr *ReservationRepo) CloseSession(ctx context.Context) {
 	rr.session.Close()
+	rr.cli.Disconnect(ctx)
+}
+
+func (rr *ReservationRepo) Ping() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check connection -> if no error, connection is established
+	err := rr.cli.Ping(ctx, readpref.Primary())
+	if err != nil {
+		rr.logger.Println(err)
+	}
+
+	// Print available databases
+	databases, err := rr.cli.ListDatabaseNames(ctx, bson.M{})
+	if err != nil {
+		rr.logger.Println(err)
+	}
+	fmt.Println(databases)
 }
 
 // Create tables
@@ -68,35 +100,26 @@ func (rr *ReservationRepo) CreateTables() {
 	err := rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(location text, accomm_id text, reservation_id UUID, guest_email text, host_email text, price int, 
-					num_of_People int, start_date timestamp, end_date timestamp, 
-					PRIMARY KEY ((accomm_id), guest_email, reservation_id)) 
-					WITH CLUSTERING ORDER BY (guest_email ASC, reservation_id ASC)`,
+					num_of_People int, start_date timestamp, end_date timestamp, hostId text, guestId text, 
+					PRIMARY KEY ((location), accomm_id, end_date, start_date, reservation_id)) 
+					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date ASC, start_date ASC, reservation_id ASC)`,
 			"reservation_by_accommodation")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 	}
 
-	// table for reservations that are relevant to a guest (he wants to see all of the reservations he made)
-	/*err = rr.session.Query(
+	/* table for reservations that are relevant to a user (guest - when he wants to delete his reservations and
+	   both guest and host - when the service is checking their pending reservations before deleting their account)
+	*/
+	err = rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s
-					(guest_email text, reservation_id UUID, accomm_id text, price int, num_of_People int, start_date timestamp, end_date timestamp,
-					PRIMARY KEY ((guest_email), reservation_id, accomm_id))
-					WITH CLUSTERING ORDER BY (reservation_id ASC, accomm_id ASC)`,
-			"reservation_by_guest")).Exec()
+					(role text, ownerId text, end_date timestamp, accomm_id text, location text, start_date timestamp,
+					PRIMARY KEY ((role), ownerId, end_date, accomm_id, start_date))
+					WITH CLUSTERING ORDER BY (ownerId ASC, end_date ASC, accomm_id ASC, start_date ASC)`,
+			"reservation_by_user")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 	}
-
-	// table for reservations that are relevant to a host (host wants to see reservations of all his accommodations)
-	err = rr.session.Query(
-		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s
-					(host_email text, reservation_id UUID, accomm_id text, price int, num_of_People int, start_date timestamp, end_date timestamp,
-					PRIMARY KEY ((host_email), reservation_id, accomm_id))
-					WITH CLUSTERING ORDER BY (reservation_id ASC, accomm_id ASC)`,
-			"reservation_by_host")).Exec()
-	if err != nil {
-		rr.logger.Println(err)
-	}*/
 
 	/* Additional information about the price of an accommodation is stored here.
 	   The reason why it is stored in the Reservation database (and service)
@@ -116,8 +139,8 @@ func (rr *ReservationRepo) CreateTables() {
 	err = rr.session.Query(
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(variation_id UUID, location text, accomm_id text, percentage int, start_date timestamp, end_date timestamp, 
-					PRIMARY KEY ((location), accomm_id, start_date, end_date, variation_id)) 
-					WITH CLUSTERING ORDER BY (accomm_id ASC, start_date DESC, end_date DESC, variation_id ASC)`,
+					PRIMARY KEY ((location), accomm_id, end_date, start_date, variation_id)) 
+					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date DESC, start_date DESC, variation_id ASC)`,
 			"variation_by_accomm_and_interval")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
@@ -128,33 +151,56 @@ func (rr *ReservationRepo) CreateTables() {
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
 					(availability_id UUID, accomm_id text, start_date timestamp, end_date timestamp,
 					name text, location text, min_capacity int, max_capacity int, 
-					PRIMARY KEY ((location), accomm_id, start_date, end_date)) 
-					WITH CLUSTERING ORDER BY (accomm_id ASC, start_date DESC, end_date DESC)`,
+					PRIMARY KEY ((location), accomm_id, end_date, start_date)) 
+					WITH CLUSTERING ORDER BY (accomm_id ASC, end_date DESC, start_date DESC)`,
 			"availability_by_accomm")).Exec()
+	if err != nil {
+		rr.logger.Println(err)
+	}
+
+	err = rr.session.Query(
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s 
+					(availability_id UUID, accomm_id text, start_date timestamp, end_date timestamp,
+					name text, location text, min_capacity int, max_capacity int, 
+					PRIMARY KEY ((location), end_date, start_date)) 
+					WITH CLUSTERING ORDER BY (end_date DESC, start_date DESC)`,
+			"availability_by_search_parameters")).Exec()
 	if err != nil {
 		rr.logger.Println(err)
 	}
 
 }
 
-func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability) (string, error) {
+func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability, id string) (string, error) {
 
-	scanner := rr.session.Query(`SELECT * FROM availability_by_accomm WHERE location = ? AND accomm_id = ? 
-	AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		availability.Location, availability.AccommID, availability.EndDate, availability.StartDate).Iter().Scanner()
+	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND accomm_id = ?
+	 AND end_date >= ?`,
+		availability.Location, availability.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
-		return "Can't change availability because there is another availability during this period", nil
+		var av domain.Availability
+		err := scanner.Scan(&av.StartDate, &av.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+		}
+		if av.StartDate.Before(availability.EndDate) && av.EndDate.After(availability.StartDate) {
+			return "Can't change availability because there is another availability during this period", nil
+		}
 	}
 
-	scanner = rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ? 
-	AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		availability.Location, availability.AccommID, availability.EndDate, availability.StartDate).Iter().Scanner()
+	scanner = rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
+	 AND end_date >= ?`,
+		availability.Location, availability.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
-		return "Can't change availability because there are reservations during this period", nil
+		var res domain.Reservation
+		err := scanner.Scan(&res.StartDate, &res.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+		}
+		if res.StartDate.Before(availability.EndDate) && res.EndDate.After(availability.StartDate) {
+			return "Can't change availability because there are reservations during this period", nil
+		}
 	}
 
 	availability.AvailabilityID, _ = gocql.RandomUUID()
@@ -163,31 +209,93 @@ func (rr *ReservationRepo) InsertAvailability(availability *domain.Availability)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		availability.Location, availability.AccommID, availability.StartDate, availability.EndDate, availability.Name,
 		availability.MinCapacity, availability.MaxCapacity, availability.AvailabilityID).Exec()
+
 	if err != nil {
 		rr.logger.Println(err)
 		return "", err
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	avCollection := rr.getAvCollection()
+
+	var avByUser domain.AvailabilityByUser
+
+	avByUser.AvailabilityID = availability.AvailabilityID
+	avByUser.AccommID = availability.AccommID
+	avByUser.Location = availability.Location
+	avByUser.Name = availability.Name
+	avByUser.MinCapacity = availability.MinCapacity
+	avByUser.MaxCapacity = availability.MaxCapacity
+	avByUser.StartDate = availability.StartDate
+	avByUser.EndDate = availability.EndDate
+	avByUser.UserId = id
+
+	result, err := avCollection.InsertOne(ctx, avByUser)
+	if err != nil {
+		rr.logger.Println(err)
+		return "", err
+	}
+	rr.logger.Println(result.InsertedID)
+
 	return "Changed", nil
 }
 
-func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability) string {
+func (rr *ReservationRepo) DeleteAvsByHost(id string) string {
 
-	scanner := rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
-	 AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		availability.Location, availability.AccommID, availability.EndDate, availability.StartDate).Iter().Scanner()
+	avCollection := rr.getAvCollection()
 
-	for scanner.Next() {
-		return "Can't change availability because there are reservations during this period"
-	}
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
 
-	err := rr.session.Query(
-		`DELETE FROM availability_by_accomm WHERE location = ? AND accomm_id = ? AND start_date = ? AND end_date = ?`,
-		availability.Location, availability.AccommID, availability.StartDate, availability.EndDate).Exec()
+	_, err := avCollection.DeleteMany(ctx, bson.M{"userId": id})
+
 	if err != nil {
 		rr.logger.Println(err)
 		return "Database error"
 	}
+
+	return ""
+}
+
+func (rr *ReservationRepo) DeleteAvailability(availability *domain.Availability) string {
+
+	avCollection := rr.getAvCollection()
+
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	_, err := avCollection.DeleteOne(ctx, bson.M{"accommId": availability.AccommID, "startDate": availability.StartDate})
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "Database error"
+	}
+
+	scanner := rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
+	 AND end_date >= ?`,
+		availability.Location, availability.AccommID, time.Now()).Iter().Scanner()
+
+	for scanner.Next() {
+		var res domain.Reservation
+		err := scanner.Scan(&res.StartDate, &res.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+		}
+		if res.StartDate.Before(availability.EndDate) && res.EndDate.After(availability.StartDate) {
+			return "Can't change availability because there are reservations during this period"
+		}
+	}
+
+	err = rr.session.Query(
+		`DELETE FROM availability_by_accomm WHERE location = ? AND accomm_id = ? AND end_date = ? AND start_date = ?`,
+		availability.Location, availability.AccommID, availability.EndDate, availability.StartDate).Exec()
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "Database error"
+	}
+
 	return ""
 }
 
@@ -218,37 +326,56 @@ func (rr *ReservationRepo) GetAvailability(location string, id string) ([]*domai
 
 func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation) (string, error) {
 
-	var foundAvailability = false
+	isAvailable := false
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND 
-	accomm_id = ? AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		variation.Location, variation.AccommID, variation.StartDate, variation.EndDate).Iter().Scanner()
+	accomm_id = ? AND end_date >= ?`,
+		variation.Location, variation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
-		foundAvailability = true
+		var av domain.Availability
+		err := scanner.Scan(&av.StartDate, &av.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+		}
+		if av.StartDate.Before(variation.StartDate.AddDate(0, 0, 1)) && av.EndDate.After(variation.EndDate.AddDate(0, 0, -1)) {
+			isAvailable = true
+			break
+		}
 	}
 
-	if !foundAvailability {
+	if !isAvailable {
 		return "Can't change price because the accommodation is unavailable during this period", nil
 	}
 
-	scanner = rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ? 
-	AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		variation.AccommID, variation.EndDate, variation.StartDate).Iter().Scanner()
+	scanner = rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
+	 AND end_date >= ?`,
+		variation.Location, variation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
-		return "Can't change price because there are reservations during this period", nil
+		var res domain.Reservation
+		err := scanner.Scan(&res.StartDate, &res.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+		}
+		if res.StartDate.Before(variation.EndDate) && res.EndDate.After(variation.StartDate) {
+			return "Can't change price because there are reservations during this period", nil
+		}
 	}
 
-	scanner = rr.session.Query(`SELECT * FROM variation_by_accomm_and_interval WHERE location = ? AND accomm_id = ? 
-	AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		variation.AccommID, variation.EndDate, variation.StartDate).Iter().Scanner()
+	scanner = rr.session.Query(`SELECT start_date, end_date FROM variation_by_accomm_and_interval WHERE location = ? AND accomm_id = ?
+	 AND end_date >= ?`,
+		variation.Location, variation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
-		return "Can't change price because there is another price change during this period", nil
+		var pv domain.PriceVariation
+		err := scanner.Scan(&pv.StartDate, &pv.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+		}
+		if pv.StartDate.Before(variation.EndDate) && pv.EndDate.After(variation.StartDate) {
+			return "Can't change price because there is another price change during this period", nil
+		}
 	}
 
 	variation.VariationID, _ = gocql.RandomUUID()
@@ -266,8 +393,8 @@ func (rr *ReservationRepo) InsertPriceVariation(variation *domain.PriceVariation
 
 func (rr *ReservationRepo) GetVariationsByAccommId(location string, id string) ([]domain.PriceVariation, error) {
 	scanner := rr.session.Query(`SELECT variation_id, location, accomm_id, percentage, start_date, end_date FROM variation_by_accomm_and_interval 
-	WHERE location = ? AND accomm_id = ?`,
-		location, id).Iter().Scanner()
+	WHERE location = ? AND accomm_id = ? AND end_date >= ?`,
+		location, id, time.Now()).Iter().Scanner()
 
 	var foundVariations []domain.PriceVariation
 	for scanner.Next() {
@@ -288,13 +415,19 @@ func (rr *ReservationRepo) GetVariationsByAccommId(location string, id string) (
 
 func (rr *ReservationRepo) DeletePriceVariation(pv *domain.PriceVariation) string {
 
-	scanner := rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
-	 AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		pv.Location, pv.AccommID, pv.EndDate, pv.StartDate).Iter().Scanner()
+	scanner := rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
+	 AND end_date >= ?`,
+		pv.Location, pv.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
-		return "Can't change price because there are reservations during this period"
+		var res domain.Reservation
+		err := scanner.Scan(&res.StartDate, &res.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+		}
+		if res.StartDate.Before(pv.EndDate) && res.EndDate.After(pv.StartDate) {
+			return "Can't change price because there are reservations during this period"
+		}
 	}
 
 	err := rr.session.Query(
@@ -350,56 +483,143 @@ func (rr *ReservationRepo) GetPriceByAccomm(id string) (*domain.AccommPrice, err
 // create the reservationID in the handler before calling this method
 func (rr *ReservationRepo) InsertReservation(reservation *domain.Reservation) string {
 
-	var isAvailable = false
+	isAvailable := false
 
 	scanner := rr.session.Query(`SELECT start_date, end_date FROM availability_by_accomm WHERE location = ? AND 
-	accomm_id = ? AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		reservation.Location, reservation.AccommID, reservation.StartDate, reservation.EndDate).Iter().Scanner()
+	accomm_id = ? AND end_date >= ?`,
+		reservation.Location, reservation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
-		isAvailable = true
+		var av domain.Availability
+		err := scanner.Scan(&av.StartDate, &av.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+		}
+		if av.StartDate.Before(reservation.StartDate.AddDate(0, 0, 1)) && av.EndDate.After(reservation.EndDate.AddDate(0, 0, -1)) {
+			isAvailable = true
+			break
+		}
 	}
 
 	if !isAvailable {
 		return "Accommodation is unavailable during this period"
 	}
 
-	scanner = rr.session.Query(`SELECT * FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ? 
-	AND start_date <= ? AND end_date >= ?
-	ALLOW FILTERING`,
-		reservation.Location, reservation.AccommID, reservation.EndDate, reservation.StartDate).Iter().Scanner()
+	scanner = rr.session.Query(`SELECT start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?
+	 AND end_date >= ?`,
+		reservation.Location, reservation.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
-		return "That period is occupied"
+		var res domain.Reservation
+		err := scanner.Scan(&res.StartDate, &res.EndDate)
+		if err != nil {
+			rr.logger.Println(err)
+		}
+		if res.StartDate.Before(reservation.EndDate) && res.EndDate.After(reservation.StartDate) {
+			return "That period is occupied"
+		}
 	}
 
 	reservation.ReservationID, _ = gocql.RandomUUID()
 	err := rr.session.Query(
 		`INSERT INTO reservation_by_accommodation (location, accomm_id, reservation_id, start_date, end_date, num_of_people,
-			guest_email, host_email, price) 
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			guest_email, host_email, price, hostId, guestId) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		reservation.Location, reservation.AccommID, reservation.ReservationID, reservation.StartDate, reservation.EndDate,
-		reservation.NumOfPeople, reservation.GuestEmail, reservation.HostEmail, reservation.Price).Exec()
+		reservation.NumOfPeople, reservation.GuestEmail, reservation.HostEmail, reservation.Price,
+		reservation.HostId, reservation.GuestId).Exec()
 	if err != nil {
 		rr.logger.Println(err)
-		return "error"
+		return err.Error()
 	}
+
+	err = rr.session.Query(
+		`INSERT INTO reservation_by_user (role, ownerId, end_date, accomm_id, location, start_date) 
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		"GUEST", reservation.GuestId, reservation.EndDate, reservation.AccommID, reservation.Location,
+		reservation.StartDate).Exec()
+	if err != nil {
+		rr.logger.Println(err)
+		return err.Error()
+	}
+
+	err = rr.session.Query(
+		`INSERT INTO reservation_by_user (role, ownerId, end_date, accomm_id, location, start_date) 
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		"HOST", reservation.HostId, reservation.EndDate, reservation.AccommID, reservation.Location,
+		reservation.StartDate).Exec()
+	if err != nil {
+		rr.logger.Println(err)
+		return err.Error()
+	}
+
 	return ""
+}
+
+func (rr *ReservationRepo) GetPendingReservationsByUser(role string, id string) (bool, error) {
+
+	scanner := rr.session.Query(`SELECT location FROM reservation_by_user WHERE role = ? AND ownerId = ? 
+	AND end_date >= ?`,
+		role, id, time.Now()).Iter().Scanner()
+
+	for scanner.Next() {
+		return true, nil
+	}
+
+	if scanner.Err() != nil {
+		rr.logger.Println(scanner.Err().Error())
+		return true, scanner.Err()
+	}
+
+	return false, nil
+}
+
+func (rr *ReservationRepo) DeleteReservation(res domain.Reservation) (string, error) {
+
+	err := rr.session.Query(
+		`DELETE FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ? AND end_date = ? 
+		AND start_date > ?`,
+		res.Location, res.AccommID, res.EndDate, time.Now()).Exec()
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "", err
+	}
+
+	err = rr.session.Query(
+		`DELETE FROM reservation_by_user WHERE role = ? AND ownerId = ? AND end_date = ? 
+		AND accomm_id = ? AND start_date > ?`,
+		"GUEST", res.GuestId, res.EndDate, res.AccommID, time.Now()).Exec()
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "", err
+	}
+
+	err = rr.session.Query(
+		`DELETE FROM reservation_by_user WHERE role = ? AND ownerId = ? AND end_date = ? 
+		AND accomm_id = ? AND start_date > ?`,
+		"HOST", res.HostId, res.EndDate, res.AccommID, time.Now()).Exec()
+
+	if err != nil {
+		rr.logger.Println(err)
+		return "", err
+	}
+
+	return "success", nil
 }
 
 func (rr *ReservationRepo) GetReservationsByAccomm(location string, id string) (domain.Reservations, error) {
 
 	scanner := rr.session.Query(`SELECT location, accomm_id, reservation_id, guest_email, host_email, price, 
-	num_of_People, start_date, end_date FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ? 
-	ALLOW FILTERING`,
+	num_of_People, start_date, end_date, hostId, guestId FROM reservation_by_accommodation WHERE location = ? AND accomm_id = ?`,
 		location, id).Iter().Scanner()
 
 	var foundReservations domain.Reservations
 	for scanner.Next() {
 		var res domain.Reservation
 		err := scanner.Scan(&res.Location, &res.AccommID, &res.ReservationID, &res.GuestEmail, &res.HostEmail, &res.Price,
-			&res.NumOfPeople, &res.StartDate, &res.EndDate)
+			&res.NumOfPeople, &res.StartDate, &res.EndDate, &res.HostId, &res.GuestId)
 		if err != nil {
 			rr.logger.Println(err)
 			return nil, err
@@ -418,9 +638,8 @@ func (rr *ReservationRepo) CheckPrice(res domain.Reservation) []domain.PriceVari
 	var variations []domain.PriceVariation
 
 	scanner := rr.session.Query(`SELECT accomm_id, percentage, start_date, end_date FROM variation_by_accomm_and_interval 
-	WHERE location = ? AND accomm_id = ? AND start_date <= ? AND end_date >= ? 
-	ALLOW FILTERING`,
-		res.Location, res.AccommID, res.EndDate, res.StartDate).Iter().Scanner()
+	WHERE location = ? AND accomm_id = ? AND end_date >= ?`,
+		res.Location, res.AccommID, time.Now()).Iter().Scanner()
 
 	for scanner.Next() {
 		var variation domain.PriceVariation
@@ -429,12 +648,87 @@ func (rr *ReservationRepo) CheckPrice(res domain.Reservation) []domain.PriceVari
 			rr.logger.Println(err)
 			//return nil, err
 		}
-		variations = append(variations, variation)
+		if variation.StartDate.Before(res.EndDate) && variation.EndDate.After(res.StartDate) {
+			variations = append(variations, variation)
+		}
 	}
 
 	if len(variations) > 0 {
 		return variations
 	} else {
 		return nil
+	}
+}
+
+func (rr *ReservationRepo) getAvCollection() *mongo.Collection {
+	avDatabase := rr.cli.Database("mongoDemo")
+	avCollection := avDatabase.Collection("availabilities")
+	return avCollection
+}
+
+func (rr *ReservationRepo) SearchAccommodations(av domain.Availability) ([]domain.Availability, error) {
+
+	var availabilites []domain.Availability
+
+	/* filter pretrage je po defaultu filter sa svim parametrima a ispod
+	   su if slucajevi kada korisnik u pretragu ne unese neki od parametara
+	   (ili nijedan od parametara osim perioda bukiranja koji je obavezan)
+	*/
+	filter := bson.M{
+		"location":    av.Location,
+		"minCapacity": bson.M{"$lte": av.MinCapacity},
+		"maxCapacity": bson.M{"$gte": av.MinCapacity},
+		"startDate":   bson.M{"$lte": av.StartDate},
+		"endDate":     bson.M{"$gte": av.EndDate},
+	}
+
+	if av.Location == "" && av.MinCapacity != 0 {
+
+		filter = bson.M{
+			"minCapacity": bson.M{"$lte": av.MinCapacity},
+			"maxCapacity": bson.M{"$gte": av.MinCapacity},
+			"startDate":   bson.M{"$lte": av.StartDate},
+			"endDate":     bson.M{"$gte": av.EndDate},
+		}
+	}
+
+	if av.MinCapacity == 0 && av.Location != "" {
+
+		filter = bson.M{
+			"location":  av.Location,
+			"startDate": bson.M{"$lte": av.StartDate},
+			"endDate":   bson.M{"$gte": av.EndDate},
+		}
+	}
+
+	if av.Location == "" && av.MinCapacity == 0 {
+
+		filter = bson.M{
+			"startDate": bson.M{"$lte": av.StartDate},
+			"endDate":   bson.M{"$gte": av.EndDate},
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := rr.getAvCollection()
+
+	coll, err := collection.Find(ctx, filter)
+
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	if err := coll.All(ctx, &availabilites); err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	if len(availabilites) > 0 {
+		return availabilites, nil
+	} else {
+		return nil, nil
 	}
 }

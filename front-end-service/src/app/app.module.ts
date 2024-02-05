@@ -2,6 +2,9 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+import { ToastrModule } from 'ngx-toastr';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginPageComponent } from './components/login-page/login-page.component';
@@ -21,6 +24,7 @@ import { ForgotPasswordPageComponent } from './components/forgot-password-page/f
 import { SearchAccommodationPageComponent } from './components/search-accommodation-page/search-accommodation-page.component';
 import { ViewAccommodationPageComponent } from './components/view-accommodation-page/view-accommodation-page.component';
 import { EditAccommodationPageComponent } from './components/edit-accommodation-page/edit-accommodation-page.component';
+import { ProfilePageComponent } from './components/profile-page/profile-page.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +38,8 @@ import { EditAccommodationPageComponent } from './components/edit-accommodation-
     ForgotPasswordPageComponent,
     SearchAccommodationPageComponent,
     ViewAccommodationPageComponent,
-    EditAccommodationPageComponent
+    EditAccommodationPageComponent,
+    ProfilePageComponent
   ],
   imports: [
     BrowserModule,
@@ -42,7 +47,13 @@ import { EditAccommodationPageComponent } from './components/edit-accommodation-
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    NgxCaptchaModule
+    NgxCaptchaModule,
+    ToastrModule.forRoot({
+      positionClass:"toast-top-center",
+      preventDuplicates: true,
+      closeButton: true
+    }),
+    BrowserAnimationsModule
   ],
   providers: [ApiService,
     AccommodationService,

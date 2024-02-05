@@ -20,10 +20,15 @@ export class ConfigService {
   private _price_variation_url = this._api_url + "/reservation/accommodation/price-variation/"
   private _availability_url = this._api_url + "/reservation/availability/"
   private _create_price_variation_url = this._api_url + "/reservation/host/accommodation/price-variation/"
-  private _create_availability_url = this._api_url + "/reservation/host/availability/create"
+  private _create_availability_url = this._api_url + "/reservation/host/availability/create/"
   private _delete_availability_url = this._api_url + "/reservation/host/availability/delete"
   private _delete_price_variation_url = this._api_url + "/reservation/host/accommodation/price-variation/delete"
   private _reservation_url = this._api_url + "/reservation/guest/"
+  private _search_accomm_url = this._api_url + "/reservation/search/"
+  private _delete_account_url = this._api_url + "/users/delete-account"
+  private _cancel_reservation_url = this._api_url + "/reservation/guest/delete/"
+  private _profile_url = this._api_url + "/profile/"
+  private _edit_profile_url = this._api_url + "/users/edit-account/"
 
   get accommodations_url(): string {
     return this._accommodations_url;
@@ -95,5 +100,25 @@ export class ConfigService {
 
   get create_availability_url(): string {
     return this._create_availability_url
+  }
+
+  get search_accomm_url(): string {
+    return this._search_accomm_url
+  }
+
+  get delete_account_url(): string {
+    return this._delete_account_url
+  }
+
+  get cancel_reservation_url(): string {
+    return this._cancel_reservation_url
+  }
+
+  get profile_url(): string {
+    return this._profile_url
+  }
+
+  get edit_profile_url(): string {
+    return this._edit_profile_url
   }
 }

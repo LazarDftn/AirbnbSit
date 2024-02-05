@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { Accommodation } from 'src/app/model/accommodation';
 import { AccommodationService } from 'src/app/services/accommodation.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -19,7 +20,8 @@ export class CreateAccommodationPageComponent implements OnInit {
   constructor(private accommodationService: AccommodationService,
     private authService: AuthService,
     private fb: FormBuilder,
-    private router: Router){}
+    private router: Router,
+    private toastr: ToastrService){}
 
   ngOnInit(): void {
 
@@ -39,8 +41,9 @@ export class CreateAccommodationPageComponent implements OnInit {
     if (this.accommForm.valid && this.accommodation.maxCapacity >= this.accommodation.minCapacity) {
     this.accommodationService.create(this.accommodation).subscribe(data => 
       {this.router.navigate(['accommodation/' + data.body])});
+      this.toastr.success("Successfully created an Accommodation!", "Success");
     } else {
-      console.error("Form is invalid!");
+      this.toastr.warning("Form is invalid!", "Warning");
     }
   }
 
@@ -53,13 +56,9 @@ export class CreateAccommodationPageComponent implements OnInit {
       maxCapacity: []
     });
   }
-
-  validateScript(field: string): boolean {
-    if (field.includes("<") || field.includes(">")){
-      alert("Stay back hacker!")
-      return false
-    }
-    return true
+  
+  cancelBtn(){
+    this.router.navigate(['welcome-page'])
   }
   
 }

@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validator, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { User } from 'src/app/model/user';
+import { UserProfile } from 'src/app/model/userProfile';
 import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
@@ -11,9 +13,9 @@ import { AuthService } from 'src/app/services/auth.service';
 })
 export class LoginPageComponent implements OnInit {
   protected loginForm!: FormGroup;
-  error = ""
 
   constructor(private formBuilder: FormBuilder,
+    private toastr: ToastrService,
     private authService: AuthService,
     private router: Router){}
 
@@ -28,18 +30,20 @@ export class LoginPageComponent implements OnInit {
   onSubmit(loginData: any){
 
     if (this.loginForm.valid){
-      this.error = ""
       this.authService.login(loginData).subscribe(data => {
-        var user: User = data.body
+        var user: UserProfile = data.body
         localStorage.setItem("airbnbToken", user.token) //set the token and user data in the localStorage when he logs in
         localStorage.setItem("airbnbEmail", user.email)
         localStorage.setItem("airbnbRole", data.body.user_type)
+        localStorage.setItem("airbnbUsername", data.body.username)
+        localStorage.setItem("airbnbId", data.body.ID)
         this.router.navigate(['welcome-page'])
+        this.toastr.success("Successfully loged in!", "Success");
       }, err => {
-        this.error = err.error.error
+        this.toastr.error(err.error.error, "Error");
       })
     } else {
-      this.error = "Please fill out all fields and check that you're not a robot!"
+      this.toastr.warning("Please fill out all fields and check that you're not a robot!", "Warning");
     }
   }
 

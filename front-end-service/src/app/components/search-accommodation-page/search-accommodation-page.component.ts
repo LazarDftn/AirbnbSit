@@ -39,7 +39,7 @@ export class SearchAccommodationPageComponent implements OnInit {
   }
 
   goToAvailable(av: Availability){
-    window.open('http://localhost:4200/accommodation/' + av.accommId, '_blank')
+    window.open('https://localhost:4200/accommodation/' + av.accommId, '_blank')
   }
 
   search(){
